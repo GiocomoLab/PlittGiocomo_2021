@@ -19,6 +19,10 @@ from astropy.convolution import convolve, Gaussian1DKernel
 ### useful general purpose functions for data analysis ###
 
 def _first_sess_gen(mlist,fs, default_first = 5):
+    '''create list of first sessions to allow flexible inputs in other functions
+    inputs: mlist - list of mice
+            fs - first_sessions. can be list, int, or None
+    returns: fs - list of first sessions'''
     if fs is None:
         return len(mlist)*[default_first]
     elif isinstance(fs,int):
@@ -27,18 +31,29 @@ def _first_sess_gen(mlist,fs, default_first = 5):
         return fs
 
 class LOTrialO:
-    '''generator for leave-one-trial-out cross-validation'''
+    '''Iterator for train and test indices for  leave-one-trial-out cross-validation
+    using all timepoints.
+    usage: for train,test in LOTrialO(starts,stops,S.shape[0]):
+                S_train,S_test = S[train,:], S[test,:]
+                model.fit(S_train)
+                model.test(S_test)
+
+            starts - indices of trial starts
+            stops - indices of trial stops
+            N - size of timepoints dimension
+
+            returns: train - boolean of training indices
+                    test - boolean of test indices
+            '''
     def __init__(self,starts,stops,N):
         self.train_mask = np.zeros([N,])
         self.test_mask = np.zeros([N,])
-        self.c = 0
         self.starts = starts
         self.stops = stops
         self.N = N
 
     def __iter__(self):
         self.c=-1
-        #train,test = self.get_masks()
         return self
 
     def get_masks(self):
@@ -59,9 +74,16 @@ class LOTrialO:
         return train, test
 
 def nansmooth(A,sig):
+    '''apply Gaussian smoothing to matrix A containing nans with kernel sig
+    without propogating nans'''
+
+    #find nans
     nan_inds = np.isnan(A)
     A_nanless = np.copy(A)
+    # make nans 0
     A_nanless[nan_inds]=0
+
+    # inversely weight nanned indices
     One = np.ones(A.shape)
     One[nan_inds]=.001
     A_nanless= filters.gaussian_filter(A_nanless,sig)
@@ -69,28 +91,24 @@ def nansmooth(A,sig):
     return A_nanless/One
 
 def df(C,ops={'sig_baseline':10,'win_baseline':300,'sig_output':3,'method':'maximin'}):
-    '''delta F / F'''
-    if ops['method']=='maximin':
+    '''delta F / F using maximin method from Suite2P
+    inputs: C - neuropil subtracted fluorescence (timepoints x neurons)
+    outputs dFF - timepoints x neurons'''
+    if ops['method']=='maximin': # windowed baseline estimation
         Flow = filters.gaussian_filter(C,    [ops['sig_baseline'], 0])
         Flow = filters.minimum_filter1d(Flow,    ops['win_baseline'],axis=0)
         Flow = filters.maximum_filter1d(Flow,    ops['win_baseline'],axis=0)
     else:
         pass
 
-    C-=Flow
-    C/=Flow
-    return filters.gaussian_filter(C,[ops['sig_output'],0])
-
-
-
-def make_spline_basis(x,knots=np.arange(0,1,.2)):
-    '''make cubic spline basis functions'''
-    knotfunc = lambda k: np.power(np.multiply(x-k,(x-k)>0),3)
-    spline_basis_list = [knotfunc(k) for k in knots.tolist()]
-    spline_basis_list += [np.ones(x.shape[0]),x,np.power(x,2)]
-    return np.array(spline_basis_list).T
+    C-=Flow # substract baseline (dF)
+    C/=Flow # divide by baseline (dF/F)
+    return filters.gaussian_filter(C,[ops['sig_output'],0]) # smooth result
 
 def correct_trial_mask(rewards,starts,stops,N):
+    '''create mask for indices where rewards is greater than 0
+    inputs: rewards - [trials,] list or array with number of rewards per trial
+            starts - '''
     pcnt = np.zeros([N,])
     # get correct trials
     for i,(start,stop) in enumerate(zip(starts,stops)):
@@ -104,24 +122,6 @@ def lick_positions(licks,position):
     lick_inds = np.where(licks>0)[0]
     lickpos[lick_inds]=position[lick_inds]
     return lickpos
-
-
-def rate_map(C,position,bin_size=5,min_pos = 0, max_pos=450):
-    '''non-normalized rate map E[df/F]|_x '''
-    bin_edges = np.arange(min_pos,max_pos+bin_size,bin_size).tolist()
-    if len(C.shape) ==1:
-        C = np.expand_dims(C,axis=1)
-    frmap = np.zeros([len(bin_edges)-1,C.shape[1]])
-    frmap[:] = np.nan
-    occupancy = np.zeros([len(bin_edges)-1,])
-    for i, (edge1,edge2) in enumerate(zip(bin_edges[:-1],bin_edges[1:])):
-        if np.where((position>edge1) & (position<=edge2))[0].shape[0]>0:
-            frmap[i] = np.nanmean(C[(position>edge1) & (position<=edge2),:],axis=0)
-            occupancy[i] = np.where((position>edge1) & (position<=edge2))[0].shape[0]
-        else:
-            pass
-    return frmap, occupancy/occupancy.ravel().sum()
-
 
 
 def make_pos_bin_trial_matrices(arr, pos, tstart, tstop,method = 'mean',bin_size=5,
@@ -173,88 +173,6 @@ def make_pos_bin_trial_matrices(arr, pos, tstart, tstop,method = 'mean',bin_size
     else:
         return np.squeeze(trial_mat), np.squeeze(occ_mat), bin_edges, bin_centers
 
-def morph_pos_rate_map(trial_mat, effMorph):
-    if len(trial_mat.shape)==2:
-        trial_mat=trial_mat[:,:,np.newaxis]
-    effMorph = (effMorph-np.amin(effMorph))/(np.amax(effMorph)-np.amin(effMorph)+.01)+.001
-    morph_edges = np.linspace(.1,1,num=10)
-    ratemap = np.zeros([10,trial_mat.shape[1],trial_mat.shape[2]])
-    ratemap[:]=np.nan
-
-    morph_dig = np.digitize(effMorph,morph_edges)
-    for ind in np.unique(morph_dig).tolist():
-        ratemap[ind,:,:] = np.nanmean(trial_mat[morph_dig==ind,:,:],axis=0)
-    return np.squeeze(ratemap)
-
-
-def make_time_bin_trial_matrices(C,tstarts,tstops):
-    if tstarts.shape[0]>1000: # if binary, leaving in for backwards compatibility
-        tstart_inds, tstop_inds = np.where(tstarts==1)[0],np.where(tstops==1)[0]
-        ntrials = np.sum(tstarts)
-    else:
-        tstart_inds, tstop_inds = tstarts, tstops
-        ntrials = tstarts.shape[0]
-    # find longest trial
-    N = (tstops-tstarts).max()
-    if len(C.shape)>1:
-        T = np.zeros([tstarts.shape[0],N,C.shape[1]])
-    else:
-        T = np.zeros([int(tstarts.shape[0]),int(N),1])
-        C = C[:,np.newaxis]
-    T[:]=np.nan
-
-    for t,(start,stop) in enumerate(zip(tstarts.tolist(),tstops.tolist())):
-        l = stop-start
-        T[t,:l,:]=C[start:stop,:]
-    return T
-
-
-def trial_tensor(C,labels,trig_inds,pre=50,post=50):
-    '''create a tensor of trial x time x neural dimension for arbitrary centering indices'''
-
-    if len(C.shape)==1:
-        trialMat = np.zeros([trig_inds.shape[0],pre+post,1])
-        C = np.expand_dims(C,1)
-    else:
-        trialMat = np.zeros([trig_inds.shape[0],pre+post,C.shape[1]])
-    labelVec = np.zeros([trig_inds.shape[0],])
-
-    for ind, t in enumerate(trig_inds):
-        labelVec[ind] = labels[t]
-
-        if t-pre <0:
-            trialMat[ind,pre-t:,:] = C[0:t+post,:]
-            trialMat[ind,0:pre-t,:] = C[0,:]
-
-        elif t+post>C.shape[0]:
-            print(trialMat.shape)
-            print(t, post)
-            print(C.shape[0])
-            print(C[t-pre:,0].shape)
-
-            trialMat[ind,:C.shape[0]-t-post,:] = C[t-pre:,:]
-            trialMat[ind,C.shape[0]-t-post:,:] =  C[-1,:]
-
-        else:
-            trialMat[ind,:,:] = C[t-pre:t+post,:]
-
-    return trialMat, labelVec
-
-def across_trial_avg(trialMat,labelVec):
-    '''use output of trial_tensor function to return trial average'''
-    labels = np.unique(labelVec)
-
-    if len(trialMat.shape)==3:
-        avgMat = np.zeros([labels.shape[0],trialMat.shape[1],trialMat.shape[2]])
-    else:
-        avgMat = np.zeros([labels.shape[0],trialMat.shape[1],1])
-        trialMat = trialMat[:,:,np.newaxis]
-
-    for i, val in enumerate(labels.tolist()):
-        #print(np.where(labelVec==val)[0].shape)
-        avgMat[i,:,:] = np.nanmean(trialMat[labelVec==val,:,:],axis=0)
-
-    return avgMat, labels
 
 
 
@@ -432,3 +350,113 @@ def smooth_raster(x,mat,ax=None,smooth=False,sig=2,vals=None,tports=None,cmap='c
     ax.set_yticklabels(["%d" % l for l in np.arange(mat.shape[0],0,-10).tolist()])
 
     return ax
+
+
+# def morph_pos_rate_map(trial_mat, effMorph):
+#     if len(trial_mat.shape)==2:
+#         trial_mat=trial_mat[:,:,np.newaxis]
+#     effMorph = (effMorph-np.amin(effMorph))/(np.amax(effMorph)-np.amin(effMorph)+.01)+.001
+#     morph_edges = np.linspace(.1,1,num=10)
+#     ratemap = np.zeros([10,trial_mat.shape[1],trial_mat.shape[2]])
+#     ratemap[:]=np.nan
+#
+#     morph_dig = np.digitize(effMorph,morph_edges)
+#     for ind in np.unique(morph_dig).tolist():
+#         ratemap[ind,:,:] = np.nanmean(trial_mat[morph_dig==ind,:,:],axis=0)
+#     return np.squeeze(ratemap)
+
+
+
+
+# def make_time_bin_trial_matrices(C,tstarts,tstops):
+#     if tstarts.shape[0]>1000: # if binary, leaving in for backwards compatibility
+#         tstart_inds, tstop_inds = np.where(tstarts==1)[0],np.where(tstops==1)[0]
+#         ntrials = np.sum(tstarts)
+#     else:
+#         tstart_inds, tstop_inds = tstarts, tstops
+#         ntrials = tstarts.shape[0]
+#     # find longest trial
+#     N = (tstops-tstarts).max()
+#     if len(C.shape)>1:
+#         T = np.zeros([tstarts.shape[0],N,C.shape[1]])
+#     else:
+#         T = np.zeros([int(tstarts.shape[0]),int(N),1])
+#         C = C[:,np.newaxis]
+#     T[:]=np.nan
+#
+#     for t,(start,stop) in enumerate(zip(tstarts.tolist(),tstops.tolist())):
+#         l = stop-start
+#         T[t,:l,:]=C[start:stop,:]
+#     return T
+#
+#
+# def trial_tensor(C,labels,trig_inds,pre=50,post=50):
+#     '''create a tensor of trial x time x neural dimension for arbitrary centering indices'''
+#
+#     if len(C.shape)==1:
+#         trialMat = np.zeros([trig_inds.shape[0],pre+post,1])
+#         C = np.expand_dims(C,1)
+#     else:
+#         trialMat = np.zeros([trig_inds.shape[0],pre+post,C.shape[1]])
+#     labelVec = np.zeros([trig_inds.shape[0],])
+#
+#     for ind, t in enumerate(trig_inds):
+#         labelVec[ind] = labels[t]
+#
+#         if t-pre <0:
+#             trialMat[ind,pre-t:,:] = C[0:t+post,:]
+#             trialMat[ind,0:pre-t,:] = C[0,:]
+#
+#         elif t+post>C.shape[0]:
+#             print(trialMat.shape)
+#             print(t, post)
+#             print(C.shape[0])
+#             print(C[t-pre:,0].shape)
+#
+#             trialMat[ind,:C.shape[0]-t-post,:] = C[t-pre:,:]
+#             trialMat[ind,C.shape[0]-t-post:,:] =  C[-1,:]
+#
+#         else:
+#             trialMat[ind,:,:] = C[t-pre:t+post,:]
+#
+#     return trialMat, labelVec
+#
+# def across_trial_avg(trialMat,labelVec):
+#     '''use output of trial_tensor function to return trial average'''
+#     labels = np.unique(labelVec)
+#
+#     if len(trialMat.shape)==3:
+#         avgMat = np.zeros([labels.shape[0],trialMat.shape[1],trialMat.shape[2]])
+#     else:
+#         avgMat = np.zeros([labels.shape[0],trialMat.shape[1],1])
+#         trialMat = trialMat[:,:,np.newaxis]
+#
+#     for i, val in enumerate(labels.tolist()):
+#         #print(np.where(labelVec==val)[0].shape)
+#         avgMat[i,:,:] = np.nanmean(trialMat[labelVec==val,:,:],axis=0)
+#
+#     return avgMat, labels
+
+
+# def rate_map(C,position,bin_size=5,min_pos = 0, max_pos=450):
+#     '''non-normalized rate map E[df/F]|_x '''
+#     bin_edges = np.arange(min_pos,max_pos+bin_size,bin_size).tolist()
+#     if len(C.shape) ==1:
+#         C = np.expand_dims(C,axis=1)
+#     frmap = np.zeros([len(bin_edges)-1,C.shape[1]])
+#     frmap[:] = np.nan
+#     occupancy = np.zeros([len(bin_edges)-1,])
+#     for i, (edge1,edge2) in enumerate(zip(bin_edges[:-1],bin_edges[1:])):
+#         if np.where((position>edge1) & (position<=edge2))[0].shape[0]>0:
+#             frmap[i] = np.nanmean(C[(position>edge1) & (position<=edge2),:],axis=0)
+#             occupancy[i] = np.where((position>edge1) & (position<=edge2))[0].shape[0]
+#         else:
+#             pass
+#     return frmap, occupancy/occupancy.ravel().sum()
+
+# def make_spline_basis(x,knots=np.arange(0,1,.2)):
+#     '''make cubic spline basis functions'''
+#     knotfunc = lambda k: np.power(np.multiply(x-k,(x-k)>0),3)
+#     spline_basis_list = [knotfunc(k) for k in knots.tolist()]
+#     spline_basis_list += [np.ones(x.shape[0]),x,np.power(x,2)]
+#     return np.array(spline_basis_list).T
