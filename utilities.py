@@ -108,15 +108,25 @@ def df(C,ops={'sig_baseline':10,'win_baseline':300,'sig_output':3,'method':'maxi
 def correct_trial_mask(rewards,starts,stops,N):
     '''create mask for indices where rewards is greater than 0
     inputs: rewards - [trials,] list or array with number of rewards per trial
-            starts - '''
-    pcnt = np.zeros([N,])
-    # get correct trials
+            starts - list of indices for trial starts
+            stops - list of inidices for trial stops
+            N - length of total timeseries (i.e. S.shape[0])
+    outputs: pcnt - mask of indices for trials where the animal received a reward'''
+    pcnt = np.zeros([N,]) # initialize
+
+    # loop through trials and make mask
     for i,(start,stop) in enumerate(zip(starts,stops)):
         pcnt[start:stop] = int(rewards[i]>0)
     return pcnt
 
 
+
 def lick_positions(licks,position):
+    ''' creates vector of lick positions for making a lick raster
+    inputs: licks - [timepoints,] or [timepoints,1] vector of number of licks at each timepoint
+            positions - corresponding vector of positions
+    outputs: lickpos - nans where licks==0 and position where licks>0'''
+
     lickpos = np.zeros([licks.shape[0],])
     lickpos[:]=np.nan
     lick_inds = np.where(licks>0)[0]
@@ -124,61 +134,80 @@ def lick_positions(licks,position):
     return lickpos
 
 
-def make_pos_bin_trial_matrices(arr, pos, tstart, tstop,method = 'mean',bin_size=5,
-                                max_pos=450,perm=False,speed=None,speed_thr=2,
+def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=5,
+                                max_pos=450,speed=None,speed_thr=2, perm=False,
                                 mat_only = False):
-    '''make a ntrials x position x neurons tensor'''
-    if tstart.shape[0]>1000: # if binary, leaving in for backwards compatibility
-        tstart_inds, tstop_inds = np.where(tstart==1)[0],np.where(tstop==1)[0]
-        ntrials = np.sum(tstart)
-    else:
-        tstart_inds, tstop_inds = tstart, tstop
-        ntrials = tstart.shape[0]
-    # print('pos bin',tstart_inds.shape,tstop_inds.shape,ntrials)
+    '''make a ntrials x position [x neurons] matrix[/tensor]---heavily used
+    inputs: arr - timepoints x anything array to be put into trials x positions format
+            pos - position at each timepoint
+            tstart_inds - indices of trial starts
+            tstop_inds - indices of trial stops
+            bin_size - spatial bin size in cm
+            max_pos - maximum position on track
+            speed - vector of speeds at each timepoint. If None, then no speed filtering is done
+            speed_thr - speed threshold in cm/s. Timepoints of low speed are dropped
+            perm - bool. whether to circularly permute timeseries before binning. used for permutation testing
+            mat_only - bool. return just spatial binned data or also occupancy, bin edges, and bin bin_centers
 
-    if speed is not None:
+    outputs: if mat_only
+                    trial_mat - position binned data
+            else
+                    trial_mat
+                    occ_mat - trials x positions matrix of bin occupancy
+                    bin_edges - position bin edges
+                    bin_centers - bin centers '''
+
+
+
+    ntrials = tstart.shape[0]
+    if speed is not None: # mask out speeds below speed threshold
         pos[speed<speed_thr]=-1000
         arr[speed<speed_thr,:]=np.nan
 
-    #ntrials = np.sum(tstart)
+    # make position bins
     bin_edges = np.arange(0,max_pos+bin_size,bin_size)
     bin_centers = bin_edges[:-1]+bin_size/2
     bin_edges = bin_edges.tolist()
-    #print(len(bin_edges),bin_centers.shape)
 
 
+    # if arr is a vector, expand dimension
     if len(arr.shape)<2:
         arr = np.expand_dims(arr,axis=1)
+
 
     trial_mat = np.zeros([int(ntrials),len(bin_edges)-1,arr.shape[1]])
     trial_mat[:] = np.nan
     occ_mat = np.zeros([int(ntrials),len(bin_edges)-1])
-
-
-    # print(int(ntrials),tstart_inds.shape,tstop_inds.shape)
-    #print(tstart_inds[[0,1,-1]],tstop_inds[[0,1,-1]])
-    for trial in range(int(ntrials)):
-
+    for trial in range(int(ntrials)): # for each trial
+            # get trial indices
             firstI, lastI = tstart_inds[trial], tstop_inds[trial]
             arr_t,pos_t = arr[firstI:lastI,:], pos[firstI:lastI]
-            if perm:
+            if perm: # circularly permute if desired
                 pos_t = np.roll(pos_t,np.random.randint(pos_t.shape[0]))
-            map, occ = rate_map(arr_t,pos_t,bin_size=bin_size)
-            trial_mat[trial,:,:] = map
-            occ_mat[trial,:] = occ
-            #print(map.ravel())
-    # self.trial_matrices = trial_matrices
+
+            # average within spatial bins
+            for b, (edge1,edge2) in enumerate(zip(bin_edges[:-1],bin_edges[1:])):
+                if np.where((pos_t>edge1) & (pos_t<=edge2))[0].shape[0]>0:
+                    trial_mat[trial,b] = np.nanmean(arr_t[(pos_t>edge1) & (pos_t<=edge2),:],axis=0)
+                    occ_mat[trial,b] = np.where((pos_t>edge1) & (pos_t<=edge2))[0].shape[0]
+                else:
+                    pass
+
     if mat_only:
         return np.squeeze(trial_mat)
     else:
-        return np.squeeze(trial_mat), np.squeeze(occ_mat), bin_edges, bin_centers
-
+        return np.squeeze(trial_mat), np.squeeze(occ_mat/occ_mat.sum(axis=1)), bin_edges, bin_centers
 
 
 
 def trial_type_dict(mat,type_vec):
     '''make dictionary where each key is a trial type and data is arbitrary trial x var x var data
-    should be robust to whether or not non-trial dimensions exist'''
+    should be robust to whether or not non-trial dimensions exist
+    inputs: mat - data to be put in dictionary
+            type_vec - [# trials, ] vector of labels used for making dictionary
+    outputs: d - dictionary or split data
+    '''
+
     d = {'all': np.squeeze(mat)}
     ndim = len(d['all'].shape)
     d['labels'] = type_vec
@@ -200,65 +229,69 @@ def trial_type_dict(mat,type_vec):
 
 
 def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
-    '''get abunch of single trial behavioral information and save it in a dictionary'''
+    '''get relevant single trial behavioral information and return a dictionary
+    inputs: data - VRDat pandas dataframe from preprocessing.behavior_dataframe
+            rzone0 - reward zone for S=0 morph for context discrimination task
+            rzone1 - reward zone for S=1 morph for context discrimination task
+    outputs: trial_info - dictionary of single trial information
+            tstart_inds - array of trial starts
+            teleport_inds - array of trial stops
+    '''
+
+
+    # find trial start and stops
     tstart_inds, teleport_inds = data.index[data.tstart==1],data.index[data.teleport==1]
-    # print('by trial func', tstart_inds.shape,teleport_inds.shape)
-    #print(tstart_inds.shape[0],teleport_inds.shape[0])
+
+
     trial_info={}
-    morphs = np.zeros([tstart_inds.shape[0],])
-    max_pos = np.zeros([tstart_inds.shape[0],])
-    rewards = np.zeros([tstart_inds.shape[0],])
-    omissions = np.zeros([tstart_inds.shape[0],])
-    zone0_licks = np.zeros([tstart_inds.shape[0],])
-    zone1_licks = np.zeros([tstart_inds.shape[0],])
-    zone0_speed = np.zeros([tstart_inds.shape[0],])
-    zone1_speed = np.zeros([tstart_inds.shape[0],])
-    pcnt = np.zeros([tstart_inds.shape[0],]); pcnt[:] = np.nan
-    wallJitter= np.zeros([tstart_inds.shape[0],])
-    towerJitter= np.zeros([tstart_inds.shape[0],])
-    bckgndJitter= np.zeros([tstart_inds.shape[0],])
-    clickOn= np.zeros([tstart_inds.shape[0],])
-    pos_lick = np.zeros([tstart_inds.shape[0],])
-    pos_lick[:] = np.nan
+    morphs = np.zeros([tstart_inds.shape[0],]) # mean morph
+    max_pos = np.zeros([tstart_inds.shape[0],]) # maximum position reached by the animal
+    rewards = np.zeros([tstart_inds.shape[0],]) # number of rewards dispensed on trial
+    wallJitter= np.zeros([tstart_inds.shape[0],]) # jitter added to wall cues
+    towerJitter= np.zeros([tstart_inds.shape[0],]) # jitter added to tower color
+    bckgndJitter= np.zeros([tstart_inds.shape[0],]) # jitter added to background color
+    clickOn= np.zeros([tstart_inds.shape[0],]) # autoreward on?
+    pos_lick = np.nan*np.zeros([tstart_inds.shape[0],]) # posisition of first lick
+    # pos_lick[:] = np.nan
 
-    # foraging task info
-    reward_pos = np.zeros([tstart_inds.shape[0],])
-    reward_pos[:] = np.nan
-    rzone_entry = np.zeros([tstart_inds.shape[0],])
-    rzone_entry[:] = np.nan
+    # discrimination task
+    omissions = np.zeros([tstart_inds.shape[0],]) # whether the animal missed the reward zone
+    zone0_licks = np.zeros([tstart_inds.shape[0],]) # licks in reward zone 0
+    zone1_licks = np.zeros([tstart_inds.shape[0],]) # licks in reward zone 1
+    zone0_speed = np.zeros([tstart_inds.shape[0],]) # speed in reward zone 0
+    zone1_speed = np.zeros([tstart_inds.shape[0],]) # speed in reward zone 1
+    pcnt = np.nan*np.zeros([tstart_inds.shape[0],]) # for psychometric curve plotting
 
-    for (i,(s,f)) in enumerate(zip(tstart_inds,teleport_inds)):
-        sub_frame = data[s:f]
+    # foraging task info (and discrimination task)
+    reward_pos = np.nan*np.zeros([tstart_inds.shape[0],]) # position reward was delivered
+    rzone_entry = np.nan*np.zeros([tstart_inds.shape[0],]) # position animal entered reward zone
 
+
+    for (i,(s,f)) in enumerate(zip(tstart_inds,teleport_inds)): # for each trial
+
+        sub_frame = data[s:f] # get rows for trial
+
+        # get the morph value for that trial. omit if it's undefined
         m, counts = sp.stats.mode(sub_frame['morph'],nan_policy='omit')
         if len(m)>0:
             morphs[i] = m
             max_pos[i] = np.nanmax(sub_frame['pos'])
             rewards[i] = np.nansum(sub_frame['reward'])
 
+            # if reward was delivered
             if rewards[i]>0:
+                # position of reward
                 rpos=sub_frame.loc[sub_frame['reward']>0,'pos']
-
                 reward_pos[i]=rpos._values[0]
 
-
+                # entry to reward zone
                 rzone_poss = sub_frame.loc[sub_frame['rzone']>0,'pos']
                 if rzone_poss.shape[0]>0:
                     rzone_entry[i]=rzone_poss._values[0]
                 else:
                     rzone_entry[i]=reward_pos[i]
-            # if rzone_poss.size>0:
-            #     print("rzone detected")
-            #     rzone_entry[i] =rzone_poss[0]
-            # else:
-            #     rzone_entry[i]=reward_pos[i]
 
-            zone0_mask = (sub_frame.pos>=rzone0[0]) & (sub_frame.pos<=rzone0[1])
-            zone1_mask = (sub_frame.pos>=rzone1[0]) & (sub_frame.pos<=rzone1[1])
-            zone0_licks[i] = np.nansum(sub_frame.loc[zone0_mask,'lick'])
-            zone1_licks[i] = np.nansum(sub_frame.loc[zone1_mask,'lick'])
-            zone0_speed[i]=np.nanmean(sub_frame.loc[zone0_mask,'speed'])
-            zone1_speed[i] = np.nanmean(sub_frame.loc[zone1_mask,'speed'])
+
             wj, c = sp.stats.mode(sub_frame['wallJitter'],nan_policy='omit')
             wallJitter[i] = wj
             tj, c = sp.stats.mode(sub_frame['towerJitter'],nan_policy='omit')
@@ -274,6 +307,14 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
             if pos_licks.shape[0]>0:
                 pos_lick[i] = pos_licks.iloc[0]
 
+            ### discrimination task stuff
+            zone0_mask = (sub_frame.pos>=rzone0[0]) & (sub_frame.pos<=rzone0[1])
+            zone1_mask = (sub_frame.pos>=rzone1[0]) & (sub_frame.pos<=rzone1[1])
+            zone0_licks[i] = np.nansum(sub_frame.loc[zone0_mask,'lick'])
+            zone1_licks[i] = np.nansum(sub_frame.loc[zone1_mask,'lick'])
+            zone0_speed[i]=np.nanmean(sub_frame.loc[zone0_mask,'speed'])
+            zone1_speed[i] = np.nanmean(sub_frame.loc[zone1_mask,'speed'])
+
             if m+wj+bj<.5:
                 if rewards[i]>0 and max_pos[i]>rzone1[1]:
                     pcnt[i] = 0
@@ -284,19 +325,11 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
                     pcnt[i] = 1
                 elif max_pos[i]<rzone1[1]:
                     pcnt[i]=0
-            # elif m>.5:
-            #     if rewards[i]>0 and max_pos[i]>rzone1[1]:
-            #         pcnt[i] = 1
-            #     elif max_pos[i]<rzone1[0]:
-            #         pcnt[i] = 0
-            # elif m == .5:
-            #     if zone0_licks[i]>0:
-            #         pcnt[i] = 0
-            #     elif zone1_licks[i]>0:
-            #         pcnt[i]=1
+
 
             if max_pos[i]>rzone1[1] and rewards[i]==0:
                 omissions[i]=1
+            ###
 
     trial_info = {'morphs':morphs,'max_pos':max_pos,'rewards':rewards,'zone0_licks':zone0_licks,'zone1_licks':zone1_licks,'zone0_speed':zone0_speed,
                  'zone1_speed':zone1_speed,'pcnt':pcnt,'wallJitter':wallJitter,'towerJitter':towerJitter,'bckgndJitter':bckgndJitter,'clickOn':clickOn,
@@ -305,28 +338,51 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
 
 
 def avg_by_morph(morphs,mat):
-    ''''''
+    '''average mat [trials x n ( x m)] by morph values in morphs
+    input: morphs - [ntrials,] vector used for binning
+            mat - trials x x n (x m) matrix to be binned
+    output: pcnt_mean - mat data binned and averaged by values of morphs
+    '''
+
+    # account for different sizes of mat
     morphs_u = np.unique(morphs)
     ndim = len(mat.shape)
     if ndim==1:
         pcnt_mean = np.zeros([morphs_u.shape[0],])
     elif ndim==2:
         pcnt_mean = np.zeros([morphs_u.shape[0],mat.shape[1]])
+    elif ndim ==3:
+        pcnt_mean = np.zeros([morphs_u.shape[0],mat.shape[1],mat.shape[2]])
     else:
         raise(Exception("mat is wrong number of dimensions"))
 
+    #
     for i,m in enumerate(morphs_u):
         if ndim==1:
             pcnt_mean[i] = np.nanmean(mat[morphs==m])
-        if ndim ==2:
-            pcnt_mean[i,:] = np.nanmean(mat[morphs==m,:])
+        elif ndim ==2:
+            pcnt_mean[i,:] = np.nanmean(mat[morphs==m,:],axis=0)
+        elif ndim ==3:
+            pcnt_mean[i,:,:]=np.nanmean(mat[morphs==m,:,:],axis=0)
+        else:
+            pass
     return np.squeeze(pcnt_mean)
 
 
 
 
-def smooth_raster(x,mat,ax=None,smooth=False,sig=2,vals=None,tports=None,cmap='cool'):
-    '''plot mat ( ntrials x len(x)) as a smoothed histogram'''
+def smooth_raster(x,mat,ax=None,smooth=False,sig=2,vals=None,cmap='cool',tports=None):
+    '''plot mat ( ntrials x positions) as a smoothed histogram
+    inputs: x - positions array (i.e. bin centers)
+            mat - trials x positions array to be plotted
+            ax - matplotlib axis object to use. if none, create a new figure and new axis
+            smooth - bool. smooth raster or not
+            sig - width of Gaussian smoothing
+            vals - values used to color lines in histogram (e.g. morph value)
+            cmap - colormap used appled to vals
+            tports - if mouse is teleported between the end of the trial, plot position  of teleport as x
+    outpus: ax - axis of plot object'''
+
     if ax is None:
         f,ax = plt.subplots()
 
@@ -345,11 +401,30 @@ def smooth_raster(x,mat,ax=None,smooth=False,sig=2,vals=None,tports=None,cmap='c
 
         if tports is not None:
             ax.scatter(tports[ind],i+.5,color=cm(np.float(vals[ind])),marker='x',s=50)
-    #ax.set_y
+
     ax.set_yticks(np.arange(0,mat.shape[0],10))
     ax.set_yticklabels(["%d" % l for l in np.arange(mat.shape[0],0,-10).tolist()])
 
     return ax
+
+
+ # def rate_map(C,position,bin_size=5,min_pos = 0, max_pos=450):
+ #    '''non-normalized rate map E[df/F]|_x '''
+ #    bin_edges = np.arange(min_pos,max_pos+bin_size,bin_size).tolist()
+ #    if len(C.shape) ==1:
+ #        C = np.expand_dims(C,axis=1)
+ #    frmap = np.zeros([len(bin_edges)-1,C.shape[1]])
+ #    frmap[:] = np.nan
+ #    occupancy = np.zeros([len(bin_edges)-1,])
+ #    for i, (edge1,edge2) in enumerate(zip(bin_edges[:-1],bin_edges[1:])):
+ #        if np.where((position>edge1) & (position<=edge2))[0].shape[0]>0:
+ #            frmap[i] = np.nanmean(C[(position>edge1) & (position<=edge2),:],axis=0)
+ #            occupancy[i] = np.where((position>edge1) & (position<=edge2))[0].shape[0]
+ #        else:
+ #            pass
+ #    return frmap, occupancy/occupancy.ravel().sum()
+
+
 
 
 # def morph_pos_rate_map(trial_mat, effMorph):
@@ -438,21 +513,7 @@ def smooth_raster(x,mat,ax=None,smooth=False,sig=2,vals=None,tports=None,cmap='c
 #     return avgMat, labels
 
 
-# def rate_map(C,position,bin_size=5,min_pos = 0, max_pos=450):
-#     '''non-normalized rate map E[df/F]|_x '''
-#     bin_edges = np.arange(min_pos,max_pos+bin_size,bin_size).tolist()
-#     if len(C.shape) ==1:
-#         C = np.expand_dims(C,axis=1)
-#     frmap = np.zeros([len(bin_edges)-1,C.shape[1]])
-#     frmap[:] = np.nan
-#     occupancy = np.zeros([len(bin_edges)-1,])
-#     for i, (edge1,edge2) in enumerate(zip(bin_edges[:-1],bin_edges[1:])):
-#         if np.where((position>edge1) & (position<=edge2))[0].shape[0]>0:
-#             frmap[i] = np.nanmean(C[(position>edge1) & (position<=edge2),:],axis=0)
-#             occupancy[i] = np.where((position>edge1) & (position<=edge2))[0].shape[0]
-#         else:
-#             pass
-#     return frmap, occupancy/occupancy.ravel().sum()
+#
 
 # def make_spline_basis(x,knots=np.arange(0,1,.2)):
 #     '''make cubic spline basis functions'''
