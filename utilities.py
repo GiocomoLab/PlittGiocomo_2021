@@ -1,19 +1,9 @@
 import numpy as np
-import h5py
 import scipy as sp
 import scipy.stats
-import scipy.io
-import scipy.interpolate
-from random import randrange
-import sqlite3 as sql
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d
 from scipy.ndimage import filters
-import pandas as pd
-from datetime import datetime
-from glob import glob
-import os.path
 from astropy.convolution import convolve, Gaussian1DKernel
 
 ### useful general purpose functions for data analysis ###

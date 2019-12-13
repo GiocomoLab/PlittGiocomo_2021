@@ -1,21 +1,13 @@
 import numpy as np
-import h5py
 import scipy as sp
-import scipy.stats
 import scipy.io as spio
 import scipy.interpolate
-import scipy.signal
-from random import randrange
 import sqlite3 as sql
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from scipy.ndimage.filters import gaussian_filter
 import pandas as pd
 from datetime import datetime
 from glob import glob
 import os.path
 from astropy.convolution import convolve, Gaussian1DKernel
-import h5py
 import utilities as u
 
 def loadmat_sbx(filename):
