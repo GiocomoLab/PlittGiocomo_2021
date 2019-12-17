@@ -2,113 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 from scipy.ndimage.filters import gaussian_filter1d, gaussian_filter
-import sqlite3 as sql
-import os
 import pandas as pd
 from datetime import datetime
 from glob import glob
 from random import randrange
 import math
-
-#os.sys.path.append('../')
 import utilities as u
 import preprocessing as pp
 import matplotlib.gridspec as gridspec
 
 
-
-def single_session(sess, savefigs = False,fbase=None,deconv=False,
-                correct_only=False,speedThr=False,method='bootstrap',
-                win_trial_perm=False,cell_method='s2p',morphlist=[0,1]):
-
-    # load calcium data and aligned vr
-    VRDat, C, S, A = pp.load_scan_sess(sess,fneu_coeff=.7,analysis=cell_method)
-
-    if deconv:
-        C=S
-    else:
-        pass
-
-    # get trial by trial info
-    trial_info, tstart_inds, teleport_inds = u.by_trial_info(VRDat)
-    C_trial_mat, occ_trial_mat, edges,centers = u.make_pos_bin_trial_matrices(C,VRDat['pos']._values,VRDat['tstart']._values,VRDat['teleport']._values)
-    C_morph_dict = u.trial_type_dict(C_trial_mat,trial_info['morphs'])
-    occ_morph_dict = u.trial_type_dict(occ_trial_mat,trial_info['morphs'])
-    #mask = VRDat['pos']._values>0
-
-    # find place cells individually on odd and even trials
-    # keep only cells with significant spatial information on both
-    if speedThr:
-        masks, FR, SI = place_cells_calc(C, VRDat['pos']._values,trial_info,
-                        VRDat['tstart']._values, VRDat['teleport']._values,
-                        method=method,correct_only=correct_only,speed=VRDat.speed._values,
-                        win_trial_perm=win_trial_perm,morphlist=morphlist)
-    else:
-        masks, FR, SI = place_cells_calc(C, VRDat['pos']._values,trial_info,
-                        VRDat['tstart']._values, VRDat['teleport']._values,
-                        method=method,correct_only=correct_only, win_trial_perm=win_trial_perm,
-                        morphlist=morphlist)
-
-    # plot place cells by morph
-    f_pc, ax_pc,dict = plot_placecells(C_morph_dict,masks)
-
-    ########################################################
-    # number in each environment
-    print('morph 0 place cells = %g out of %g , %f ' % (masks[0].sum(), masks[0].shape[0], masks[0].sum()/masks[0].shape[0]))
-    print('morph 1 place cells = %g out of %g, %f' % (masks[1].sum(), masks[1].shape[0], masks[1].sum()/masks[1].shape[0]))
-
-
-    # number with place fields in both
-    common_pc = np.multiply(masks[0],masks[1])
-    print('common place cells = %g' % common_pc.sum())
-        # including, excluding reward zones
-
-    # ####### stability
-    # # first vs second half correlation
-    # sc_corr, pv_corr= {}, {}
-    # sc_corr[0], pv_corr[0] = stability_split_halves(C_morph_dict[0])
-    # sc_corr[1], pv_corr[1] = stability_split_halves(C_morph_dict[1])
-
-    #   (fancier version, tortuosity of warping function over time)
-    # not implemented yet
-
-    # ####### tuning specificity
-    # #   vector length of circularized tuning curve
-    # mvl = {}
-    # mvl[0] = meanvectorlength(FR[0]['all'])
-    # mvl[1] = meanvectorlength(FR[1]['all'])
-
-    # reward cell scatter plot
-    FR_0_cpc = FR[0]['all'][:,common_pc]
-    FR_1_cpc = FR[1]['all'][:,common_pc]
-    f_rc, ax_rc = reward_cell_scatterplot(FR_0_cpc,FR_1_cpc)
-
-    # cell's topography
-    # # place cell in which morph
-    # both = np.where((masks[0]>0) & (masks[1]>0) )[0]
-    # none = np.where((masks[0]==0) & (masks[1]==0))[0]
-    # m0 = np.where((masks[0]==1) & (masks[1]==0))[0]
-    # m1 = np.where((masks[0]==0) & (masks[1]==1))[0]
-    # #tvals = np.zeros([A.shape[1],])
-    #tvals[both]=.01
-    #tvals[m0]=-1
-    #tvals[m1]=1
-
-    # reward zone score
-
-    # place field width
-
-    # place cell reliability
-
-    if savefigs:
-        f_pc.savefig(fbase+"_pc.pdf",format = 'pdf')
-        f_pc.savefig(fbase+"_pc.svg",format = 'svg')
-
-        f_rc.savefig(fbase+"_rc.pdf",format = 'pdf')
-        f_rc.savefig(fbase+"_rc.svg",format = 'svg')
-
-
-    return FR, masks, SI
 
 def cell_topo_plot(A_k,vals,fov=[512,796],map = 'cool', min = -1, max = 1):
     ''' given sparse matrix of cell footprints, A_k, and values associated with
