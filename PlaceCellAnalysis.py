@@ -2,9 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 from scipy.ndimage.filters import gaussian_filter1d, gaussian_filter
-import pandas as pd
-from datetime import datetime
-from glob import glob
 from random import randrange
 import math
 import utilities as u
@@ -13,38 +10,33 @@ import matplotlib.gridspec as gridspec
 
 
 
-def cell_topo_plot(A_k,vals,fov=[512,796],map = 'cool', min = -1, max = 1):
-    ''' given sparse matrix of cell footprints, A_k, and values associated with
-    cells, vals, plot shape of cells colored by vals'''
-
-    nz = A_k.nonzero()
-    A= np.zeros(A_k.shape)
-    A[nz]=1
-
-    for i, v in enumerate(vals.tolist()):
-        A[:,i]*=v
-
-    A_m = np.ma.array(A.max(axis=1) + A.min(axis=1))
-    A_m[A_m==0]=np.nan
-
-    f, ax = plt.subplots(figsize=[15,15])
-    ax.imshow(np.reshape(A_m,fov,order='F'),cmap=map,vmin=min,vmax=max)
-
-    return A_m, (f,ax)
-
 def plot_top_cells(S_tm,masks,SI,morph,maxcells=400):
+    '''
+    plot single cell trial x position rate maps for the cells with highest spatial information
+    inputs: S_tm - trials x positions x neurons tensor of activity
+            masks - dictionary of masks to find place cells (output of place_cells_calc)
+            SI - spatial information of each cell (output of place_cells_calc)
+            morph - vector of morph values for each trial
+            maxcells - maximum number of cells to try to plot
+    outputs: f - figure object for saving
+    '''
+
+    # find cells that are place cells in any of the morphs
     allmask = masks[0]
     for k,v in masks.items():
         allmask = allmask | v
 
+    # number of cells to plot
     nplacecells = np.minimum(allmask.sum(),maxcells)
 
+    # set up axes
     xstride = 3
     ystride = 4
     nperrow = 8
     f = plt.figure(figsize=[nperrow*xstride,nplacecells/nperrow*ystride])
     gs = gridspec.GridSpec(math.ceil(nplacecells/nperrow)*ystride,xstride*nperrow)
 
+    # sum spatial information across morphs and use as order for cells to be plotted
     SI_total = [SI[m]['all'] for m in SI.keys()]
     SIt = SI_total[0]
     for ind in SI_total[1:]:
@@ -54,24 +46,26 @@ def plot_top_cells(S_tm,masks,SI,morph,maxcells=400):
     morph_order = np.argsort(morph)
     morph_s = morph[morph_order]
 
-    for cell in range(nplacecells): # make this min of 100 and total number of place cells
+    for cell in range(nplacecells): # for each cell
+        # do some smoothing in position axis for visualization
         c = u.nansmooth(np.squeeze(S_tm[:,:,si_order[cell]]),[0,3])
+        # normalize by mean
         c/=np.nanmean(c.ravel())
         # add plots
         row_i = int(ystride*math.floor(cell/nperrow))
         col_i = int(xstride*(cell%nperrow))
-        # print(row_i,col_i)
-        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i+1])
-        trialsort_ax.imshow(c,cmap='magma',aspect='auto')
-        tick_inds = np.arange(0,c.shape[0],10)
 
 
+
+        # plot in morph order
         morphsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i])
         morphsort_ax.imshow(c[morph_order,:],cmap='magma',aspect='auto')
         tick_labels = ["%.2f" % morph_s[i] for i in tick_inds]
 
-
-
+        # plot in trial order
+        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i+1])
+        trialsort_ax.imshow(c,cmap='magma',aspect='auto')
+        tick_inds = np.arange(0,c.shape[0],10)
 
 
         morphsort_ax.set_yticks(tick_inds)
@@ -89,24 +83,40 @@ def plot_top_cells(S_tm,masks,SI,morph,maxcells=400):
     return f
 
 def reward_cell_scatterplot(fr0, fr1, rzone0 = [250,315], rzone1 = [350,415],tmax= 450):
+    '''
+    plot peak location  of place field in one environment vs the other. reward zones in
+    context discrimination task are highlighted
+    inputs: fr0 - [pos,neurons] array of average firing rate for morph 0 trials
+            fr1 - [pos, neurons] array of average firing rat for morph 1 trials
+            rzone0 - bounds of morph 0 reward zone
+            rzone1 - bound of morph 1 reward zone
+            tmax  - max position on track
+    outpus: f - figure object
+            ax - axis array
+    '''
+
     f = plt.figure(figsize=[10,10])
     gs = gridspec.GridSpec(5,5)
     ax = f.add_subplot(gs[0:-1,0:-1])
 
 
-    #f,ax = plt.subplots()
+    # plot argmax of pos in morph 0 vs argmax of pos in morp 1
     ax.scatter(5.*np.argmax(fr0,axis=0),5*np.argmax(fr1,axis=0),color='black')
     ax.plot(np.arange(tmax),np.arange(tmax),color='black')
+
+    # add reward zones
     ax.fill_between(np.arange(tmax),rzone0[0],y2=rzone0[1],color=plt.cm.cool(0),alpha=.2)
     ax.fill_betweenx(np.arange(tmax),rzone0[0],x2=rzone0[1],color=plt.cm.cool(0),alpha=.2)
     ax.fill_between(np.arange(tmax),rzone1[0],y2=rzone1[1],color=plt.cm.cool(1.),alpha=.2)
     ax.fill_betweenx(np.arange(tmax),rzone1[0],x2=rzone1[1],color=plt.cm.cool(1.),alpha=.2)
 
+    # add histogram of argmax's
     ax1 = f.add_subplot(gs[-1,0:-1])
     ax1.hist(5.*np.argmax(fr0,axis=0),np.arange(0,tmax+10,10))
     ax1.fill_betweenx(np.arange(40),rzone0[0],x2=rzone0[1],color=plt.cm.cool(0),alpha=.2)
     ax1.fill_betweenx(np.arange(40),rzone1[0],x2=rzone1[1],color=plt.cm.cool(1.),alpha=.2)
 
+    # add histogram of argmax's
     ax2 = f.add_subplot(gs[0:-1,-1])
     ax2.hist(5.*np.argmax(fr1,axis=0),np.arange(0,tmax+10,10),orientation='horizontal')
     ax2.fill_between(np.arange(40),rzone0[0],y2=rzone0[1],color=plt.cm.cool(0),alpha=.2)
@@ -115,7 +125,20 @@ def reward_cell_scatterplot(fr0, fr1, rzone0 = [250,315], rzone1 = [350,415],tma
     return f, ax
 
 
-def common_cell_remap_scatterplot(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10.,norm = True):
+def common_cell_remap_heatmap(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10.,norm = True):
+    '''
+    plot histogram of peak locations  of place field in one environment vs the other. reward zone is highlighted
+    inputs: fr0 - [pos,neurons] array of average firing rate for morph 0 trials
+            fr1 - [pos, neurons] array of average firing rat for morph 1 trials
+            rzone - bounds of possible reward zone
+            tmax  - max position on track
+            bin_size - width of spatial bins
+            norm - normalize occupancy
+    outpus: f - figure object
+            ax - axis array
+    '''
+
+
     f = plt.figure(figsize=[10,10])
     gs = gridspec.GridSpec(5,5)
     ax = f.add_subplot(gs[0:-1,0:-1])
