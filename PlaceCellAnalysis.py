@@ -143,27 +143,22 @@ def common_cell_remap_heatmap(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10
     gs = gridspec.GridSpec(5,5)
     ax = f.add_subplot(gs[0:-1,0:-1])
 
-
+    # for every cell, find location of peak firing in different environments
     heatmap = np.zeros([fr0.shape[0],fr1.shape[0]])
     for cell in range(fr0.shape[1]):
         heatmap[np.argmax(fr0[:,cell],axis=0),np.argmax(fr1[:,cell],axis=0)]+=1
-    # print(heatmap/np.amax(heatmap))
-    #f,ax = plt.subplots()
-    # ax.scatter(bin_size*np.argmax(fr0,axis=0),bin_size*np.argmax(fr1,axis=0),color='black')
+
+    # normalize for comparison across mice/conditions
     if norm:
         ax.imshow(heatmap.T/np.amax(heatmap),cmap='magma',vmin=0.05,vmax=.15)#,aspect='auto')
     else:
         ax.imshow(heatmap.T,cmap='magma',vmax=.7*np.amax(heatmap.ravel()))
-    # ax.plot(np.arange(tmax),np.arange(tmax),color='black')
-    # ax.fill_between(np.arange(tmax)/bin_size,rzone[0],y2=rzone[1],color='black',alpha=.2)
-    # ax.fill_betweenx(np.arange(tmax)/bin_size,rzone[0],x2=rzone[1],color='black',alpha=.2)
 
-
+    ## add marginal histograms
     ax1 = f.add_subplot(gs[-1,0:-1],sharex=ax)
     hist,edges = np.histogram(bin_size*np.argmax(fr0,axis=0),np.arange(0,tmax+10,10))
     ax1.fill_between(np.linspace(0,45,num=edges.shape[0]-1)-.5,hist/hist.sum(),color=plt.cm.cool(1.))
     ax1.set_xlim([-1,46])
-    # ax1.hist(bin_size*np.argmax(fr0,axis=0),np.arange(0,tmax+10,10))
     ax1.fill_betweenx([0,.05],rzone[0]/bin_size,x2=rzone[1]/bin_size,color='black',alpha=.2)
 
 
@@ -171,70 +166,64 @@ def common_cell_remap_heatmap(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10
     hist,edges = np.histogram(bin_size*np.argmax(fr1,axis=0),np.arange(0,tmax+10,10))
     ax2.fill_betweenx(np.linspace(0,45,num=edges.shape[0]-1)-.5,hist/hist.sum(),color=plt.cm.cool(0.))
     ax2.set_ylim([-1,46])
-    # ax2.hist(bin_size*np.argmax(fr1,axis=0),np.arange(0,tmax+10,10),orientation='horizontal',color='black')
     ax2.fill_between([0,.05],rzone[0]/bin_size,y2=rzone[1]/bin_size,color='black',alpha=.2)
 
 
     return f, ax
 
 
-def stability_split_halves(trial_mat):
-    '''calculate first half vs second half tuning curve correlation'''
-
-    # assume trial_mat is (trials x pos x cells)
-    half = int(trial_mat.shape[0]/2)
-
-    fr0 = np.squeeze(np.nanmean(trial_mat[:half,:,:],axis=0))
-    fr1 = np.squeeze(np.nanmean(trial_mat[half:,:,:],axis=0))
-
-    sc_corr, pv_corr = stability(fr0,fr1)
-    return sc_corr, pv_corr
-
-def stability(fr0, fr1):
-    # single cell place cell correlations
-    sc_corr = np.array([sp.stats.pearsonr(fr0[:,cell],fr1[:,cell]) for cell in range(fr0.shape[1])])
-
-    # population vector correlation
-    pv_corr  = np.array([sp.stats.pearsonr(fr0[pos,:],fr1[pos,:]) for pos in range(fr0.shape[0])])
-    return sc_corr, pv_corr
-
-def meanvectorlength(fr):
-    return np.linalg.norm(fr-fr.mean())
-
 def spatial_info(frmap,occupancy):
-    '''calculate spatial information bits/spike'''
-    ncells = frmap.shape[1]
+    '''calculate spatial information bits/spike for many cells
+    inputs: frmap - [positions, neurons] firing rate map across position
+            occupancy - [positions,] fractional occupancy of each bin
+    outpus: SI - spatial information for each cell '''
 
-    SI = []
+    ncells = frmap.shape[1]
     ### vectorizing
-    P_map = frmap - np.amin(frmap)+.001
-    # P_map = gaussian_filter(P_map,[3,0])
+    P_map = frmap #- np.amin(frmap)+.001
     P_map = P_map/P_map.mean(axis=0)
     arg = P_map*occupancy[:,np.newaxis]
     denom = arg.sum(axis=0)
-    # SI = (arg*np.log2(P_map/denom)).sum(axis=0)
     SI = (arg*np.log2(P_map)).sum(axis=0)
-    # SI = (P_map*occupancy[:,np.newaxis]*np.log2(P_map)).sum(axis=0)
+
     return SI
 
 
 
 def place_cells_calc(C, position, trial_info, tstart_inds,
-                teleport_inds,method="all",pthr = .99,correct_only=False,
-                speed=None,win_trial_perm=False,morphlist = [0,1]):
-    '''get masks for significant place cells that have significant place info
-    in both even and odd trials'''
+                teleport_inds,nperms=1000, pthr = .99, correct_only=False,
+                speed=None,win_trial_perm=True,morphlist = [0,1]):
+    '''Find significant place cells by permuation test
+    inputs: C - [timepoints, neurons] activity rate or dF/F from u.load_scan_sess()
+            position - [timepoints,] position of animal at each timepoint
+            trial_info - dictionary of trial information from u.by_trial_info()
+            tstart_inds - indices of trial starts
+            teleport_inds - indices of teleports/trial stops
+            nperms - how many permutations to do per cell
+            pthr - p-value threshold for determining significance
+            correct_only - bool, include only rewarded trials in calculation
+            speed - None, or [timepoints,]. If not None, filter by speed at 2 cm/sec
+            win_trial_perm - whether to perform permutation on whole time series or within a trial
+            morphlist - list of morph values for which to calculate place cells
+    output: masks - dictionary of [cells,] masks indicating place cells for each morph in morphlist
+            FR - dictionary with same keys as masks. Values are [pos, neurons] arrays of average firing rates
+            SI - dictionary "     ". Values are [neurons,] arrays of spatial information
+
+    '''
 
 
     C_trial_mat, occ_trial_mat, edges,centers = u.make_pos_bin_trial_matrices(C,position,tstart_inds,teleport_inds,speed = speed)
 
     morphs = trial_info['morphs']
-    if correct_only:
-        mask = trial_info['rewards']>0
-        morphs = morphs[mask]
-        C_trial_mat = C_trial_mat[mask,:,:]
-        occ_trial_mat = occ_trial_mat[mask,:]
 
+    # filter by rewarded trials if desired
+    if correct_only:
+        _mask = trial_info['rewards']>0
+        morphs = morphs[mask]
+        C_trial_mat = C_trial_mat[_mask,:,:]
+        occ_trial_mat = occ_trial_mat[_mask,:]
+
+    # divide data up by morph value of trials
     C_morph_dict = u.trial_type_dict(C_trial_mat,morphs)
     occ_morph_dict = u.trial_type_dict(occ_trial_mat,morphs)
     tstart_inds, teleport_inds = np.where(tstart_inds==1)[0], np.where(teleport_inds==1)[0]
@@ -253,69 +242,33 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
         occ_all = occ_morph_dict[m].sum(axis=0)
         occ_all /= occ_all.sum()
         SI[m]['all'] =  spatial_info(FR[m]['all'],occ_all)
-        if method == 'split_halves':
-            FR[m]['odd'] = np.nanmean(C_morph_dict[m][0::2,:,:],axis=0)
-            FR[m]['even'] = np.nanmean(C_morph_dict[m][1::2,:,:],axis=0)
-
-            # occupancy
-            occ_o, occ_e = occ_morph_dict[m][0::2,:].sum(axis=0), occ_morph_dict[m][1::2,:].sum(axis=0)
-            occ_o/=occ_o.sum()
-            occ_e/=occ_e.sum()
 
 
+        n_boots=30
+        tmat = C_morph_dict[m]
+        omat = occ_morph_dict[m]#[mask,:,:]
 
-            SI[m]['odd'] = spatial_info(FR[m]['odd'],occ_o)
-            SI[m]['even'] = spatial_info(FR[m]['even'],occ_e)
+        SI_bs = np.zeros([n_boots,C.shape[1]])
+        print("start bootstrap")
+        for b in range(n_boots):
 
-
-            p_e, shuffled_SI = spatial_info_perm_test(SI[m]['even'],C,position,
-                                    tstart_morph_dict[m][1::2],teleport_morph_dict[m][1::2],
-                                    nperms=1000,win_trial=win_trial_perm)
-            p_o, shuffled_SI = spatial_info_perm_test(SI[m]['odd'],C,position,
-                                    tstart_morph_dict[m][0::2],teleport_morph_dict[m][0::2],
-                                    nperms = 1000,win_trial=win_trial_perm ) #,shuffled_SI=shuffled_SI)
-
-
-            masks[m]=np.multiply(p_e>pthr,p_o>pthr)
-
-        elif method == 'bootstrap':
-            n_boots=30
-            # drop trial with highest firing rate
-            tmat = C_morph_dict[m]
-            # maxtrial = np.argmax(tmat.sum(axis=1),axis=0)
-            # print(maxtrial.shape)
-            # mask = np.ones([tmat.shape[0],])
-            # mask[maxtrial]=0
-            # mask = mask>0
-            # tmat = tmat[mask,:,:]
-            omat = occ_morph_dict[m]#[mask,:,:]
-
-            SI_bs = np.zeros([n_boots,C.shape[1]])
-            print("start bootstrap")
-            for b in range(n_boots):
-
-                # pick a random subset of trials
-                ntrials = tmat.shape[0] #C_morph_dict[m].shape[0]
-                bs_pcnt = .67 # proportion of trials to keep
-                bs_thr = int(bs_pcnt*ntrials) # number of trials to keep
-                bs_inds = np.random.permutation(ntrials)[:bs_thr]
-                FR_bs = np.nanmean(tmat[bs_inds,:,:],axis=0)
-                    #np.nanmean(C_morph_dict[m][bs_inds,:,:],axis=0)
-                occ_bs = omat[bs_inds,:].sum(axis=0)#occ_morph_dict[m][bs_inds,:].sum(axis=0)
-                occ_bs/=occ_bs.sum()
-                SI_bs[b,:] = spatial_info(FR_bs,occ_bs)
-            print("end bootstrap")
-            SI[m]['bootstrap']= np.median(SI_bs,axis=0).ravel()
-            p_bs, shuffled_SI = spatial_info_perm_test(SI[m]['bootstrap'],C,
-                                    position,tstart_morph_dict[m],teleport_morph_dict[m],
-                                    nperms=100,win_trial=win_trial_perm)
-            masks[m] = p_bs>pthr
-
-        else:
-            p_all, shuffled_SI = spatial_info_perm_test(SI[m]['all'],C,position,
-                                    tstart_morph_dict[m],teleport_morph_dict[m],
-                                    nperms=1000,win_trial=win_trial_perm)
-            masks[m] = p_all>pthr
+            # pick a random subset of trials
+            ntrials = tmat.shape[0] #C_morph_dict[m].shape[0]
+            bs_pcnt = .67 # proportion of trials to keep
+            bs_thr = int(bs_pcnt*ntrials) # number of trials to keep
+            bs_inds = np.random.permutation(ntrials)[:bs_thr]
+            FR_bs = np.nanmean(tmat[bs_inds,:,:],axis=0)
+                #np.nanmean(C_morph_dict[m][bs_inds,:,:],axis=0)
+            occ_bs = omat[bs_inds,:].sum(axis=0)#occ_morph_dict[m][bs_inds,:].sum(axis=0)
+            occ_bs/=occ_bs.sum()
+            SI_bs[b,:] = spatial_info(FR_bs,occ_bs)
+        print("end bootstrap")
+        SI[m]['bootstrap']= np.median(SI_bs,axis=0).ravel()
+        FR[m]['bootstrap'] = np.median(FR_bs,axis=0)
+        p_bs, shuffled_SI = spatial_info_perm_test(SI[m]['bootstrap'],C,
+                                position,tstart_morph_dict[m],teleport_morph_dict[m],
+                                nperms=100,win_trial=win_trial_perm)
+        masks[m] = p_bs>pthr
 
     return masks, FR, SI
 
