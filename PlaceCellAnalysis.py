@@ -171,7 +171,7 @@ def common_cell_remap_heatmap(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10
 
     return f, ax
 
-<<<<<<< HEAD
+
 def spatial_info(frmap,occupancy):
     '''calculate spatial information bits/spike
     inputs: frmap - [spatial bins, cells] spatially binned activity rate for each cell
@@ -182,7 +182,7 @@ def spatial_info(frmap,occupancy):
     P_map = frmap - np.amin(frmap)+.001 # make sure there's no negative activity rates
     P_map = P_map/P_map.mean(axis=0)
     SI = ((P_map*occupancy[:,np.newaxis])*np.log2(P_map)).sum(axis=0) # Skaggs and McNaughton spatial information
-=======
+
 
 def spatial_info(frmap,occupancy):
     '''calculate spatial information bits/spike for many cells
@@ -204,7 +204,6 @@ def spatial_info(frmap,occupancy):
 
 
 def place_cells_calc(C, position, trial_info, tstart_inds,
-<<<<<<< HEAD
                 teleport_inds,pthr = .99,speed=None,win_trial_perm=True,morphlist = [0,1]):
     '''Find cells that have significant spatial information info. Use bootstrapped estimate of each cell's
     spatial information to minimize effect of outlier trials
@@ -223,27 +222,6 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
     outputs: masks - dictionary of masks for cells with significant spatial info in each morph
             FR - dictionary of firing rate maps per cell per morph
             SI - dictionary of spatial information per cell per morph
-=======
-                teleport_inds,nperms=1000, pthr = .99, correct_only=False,
-                speed=None,win_trial_perm=True,morphlist = [0,1]):
-    '''Find significant place cells by permuation test
-    inputs: C - [timepoints, neurons] activity rate or dF/F from u.load_scan_sess()
-            position - [timepoints,] position of animal at each timepoint
-            trial_info - dictionary of trial information from u.by_trial_info()
-            tstart_inds - indices of trial starts
-            teleport_inds - indices of teleports/trial stops
-            nperms - how many permutations to do per cell
-            pthr - p-value threshold for determining significance
-            correct_only - bool, include only rewarded trials in calculation
-            speed - None, or [timepoints,]. If not None, filter by speed at 2 cm/sec
-            win_trial_perm - whether to perform permutation on whole time series or within a trial
-            morphlist - list of morph values for which to calculate place cells
-    output: masks - dictionary of [cells,] masks indicating place cells for each morph in morphlist
-            FR - dictionary with same keys as masks. Values are [pos, neurons] arrays of average firing rates
-            SI - dictionary "     ". Values are [neurons,] arrays of spatial information
-
-    '''
->>>>>>> 17d8a7f1f8cb25e6089b366023c62f6aa9c0c990
 
     '''
 
@@ -251,20 +229,7 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
     C_trial_mat, occ_trial_mat, edges,centers = u.make_pos_bin_trial_matrices(C,position,tstart_inds,teleport_inds,speed = speed)
     morphs = trial_info['morphs'] # mean morph values
 
-<<<<<<< HEAD
     # split into morph specific arrays
-=======
-    morphs = trial_info['morphs']
-
-    # filter by rewarded trials if desired
-    if correct_only:
-        _mask = trial_info['rewards']>0
-        morphs = morphs[mask]
-        C_trial_mat = C_trial_mat[_mask,:,:]
-        occ_trial_mat = occ_trial_mat[_mask,:]
-
-    # divide data up by morph value of trials
->>>>>>> 17d8a7f1f8cb25e6089b366023c62f6aa9c0c990
     C_morph_dict = u.trial_type_dict(C_trial_mat,morphs)
     occ_morph_dict = u.trial_type_dict(occ_trial_mat,morphs)
     tstart_inds, teleport_inds = np.where(tstart_inds==1)[0], np.where(teleport_inds==1)[0]
@@ -282,28 +247,16 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
         FR[m]['all'] = np.nanmean(C_morph_dict[m],axis=0)
         occ_all = occ_morph_dict[m].sum(axis=0) # fractional occupancy
         occ_all /= occ_all.sum()
-<<<<<<< HEAD
         SI[m]['all'] =  spatial_info(FR[m]['all'],occ_all) # spatial information
         n_boots=30
 
         tmat = C_morph_dict[m] # trial x position x cell activity rates
         omat = occ_morph_dict[m] # single trial occupancy
         SI_bs = np.zeros([n_boots,C.shape[1]]) # bootstrapped spatial information
-=======
-        SI[m]['all'] =  spatial_info(FR[m]['all'],occ_all)
-
-
-        n_boots=30
-        tmat = C_morph_dict[m]
-        omat = occ_morph_dict[m]#[mask,:,:]
-
-        SI_bs = np.zeros([n_boots,C.shape[1]])
->>>>>>> 17d8a7f1f8cb25e6089b366023c62f6aa9c0c990
         print("start bootstrap")
         for b in range(n_boots):
 
             # pick a random subset of trials
-<<<<<<< HEAD
             ntrials = tmat.shape[0]
             bs_pcnt = .67 # proportion of trials to keep
             bs_thr = int(bs_pcnt*ntrials) # number of trials to keep
@@ -320,24 +273,6 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
                                 position,tstart_morph_dict[m],teleport_morph_dict[m],
                                 nperms=1000,win_trial=win_trial_perm)
         masks[m] = p_bs>pthr # hypothesis test
-=======
-            ntrials = tmat.shape[0] #C_morph_dict[m].shape[0]
-            bs_pcnt = .67 # proportion of trials to keep
-            bs_thr = int(bs_pcnt*ntrials) # number of trials to keep
-            bs_inds = np.random.permutation(ntrials)[:bs_thr]
-            FR_bs = np.nanmean(tmat[bs_inds,:,:],axis=0)
-                #np.nanmean(C_morph_dict[m][bs_inds,:,:],axis=0)
-            occ_bs = omat[bs_inds,:].sum(axis=0)#occ_morph_dict[m][bs_inds,:].sum(axis=0)
-            occ_bs/=occ_bs.sum()
-            SI_bs[b,:] = spatial_info(FR_bs,occ_bs)
-        print("end bootstrap")
-        SI[m]['bootstrap']= np.median(SI_bs,axis=0).ravel()
-        FR[m]['bootstrap'] = np.median(FR_bs,axis=0)
-        p_bs, shuffled_SI = spatial_info_perm_test(SI[m]['bootstrap'],C,
-                                position,tstart_morph_dict[m],teleport_morph_dict[m],
-                                nperms=100,win_trial=win_trial_perm)
-        masks[m] = p_bs>pthr
->>>>>>> 17d8a7f1f8cb25e6089b366023c62f6aa9c0c990
 
     return masks, FR, SI
 
