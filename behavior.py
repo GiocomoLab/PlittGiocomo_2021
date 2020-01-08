@@ -3,68 +3,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import scipy as sp
 import os
-from astropy.convolution import convolve, Gaussian1DKernel
 import utilities as u
-
-
-
-def lick_plot_task(d,bin_edges,rzone0=(250.,315),rzone1=(350,415),smooth=True,ratio = True, max_pos=None):
-    '''standard plot for licking behavior'''
-    f = plt.figure(figsize=[15,15])
-
-    gs = gridspec.GridSpec(5,5)
-
-
-    ax = f.add_subplot(gs[0:-1,0:-1])
-    ax.axvspan(rzone0[0],rzone0[1],alpha=.2,color=plt.cm.cool(np.float(1.)),zorder=0)
-    ax.axvspan(rzone1[0],rzone1[1],alpha=.2,color=plt.cm.cool(np.float(0.)),zorder=0)
-    ax = u.smooth_raster(bin_edges[:-1],d['all'],vals=1-d['labels'],ax=ax,smooth=smooth,tports=max_pos)
-    ax.set_ylabel('Trial',size='xx-large')
-
-
-    meanlr_ax = f.add_subplot(gs[-1,:-1])
-    meanlr_ax.axvspan(rzone0[0],rzone0[1],alpha=.2,color=plt.cm.cool(np.float(1)),zorder=0)
-    meanlr_ax.axvspan(rzone1[0],rzone1[1],alpha=.2,color=plt.cm.cool(np.float(0)),zorder=0)
-    for i, m in enumerate(np.unique(d['labels'])):
-        meanlr_ax.plot(bin_edges[:-1],np.nanmean(d[m],axis=0),color=plt.cm.cool(1-np.float(m)))
-    meanlr_ax.set_ylabel('Licks/sec',size='xx-large')
-    meanlr_ax.set_xlabel('Position (cm)',size='xx-large')
-
-
-    if ratio:
-        lickrat_ax = f.add_subplot(gs[:-1,-1])
-        bin_edges = np.array(bin_edges)
-        rzone0_inds = np.where((bin_edges[:-1]>=rzone0[0]) & (bin_edges[:-1] <= rzone0[1]))[0]
-        rzone1_inds = np.where((bin_edges[:-1]>=rzone1[0]) & (bin_edges[:-1] <= rzone1[1]))[0]
-        rzone_lick_ratio = {}
-        for i,m in enumerate(np.unique(d['labels'])):
-            zone0_lick_rate = d[m][:,rzone0_inds].mean(axis=1)
-            zone1_lick_rate = d[m][:,rzone1_inds].mean(axis=1)
-            rzone_lick_ratio[m] = np.divide(zone0_lick_rate,zone0_lick_rate+zone1_lick_rate)
-            rzone_lick_ratio[m][np.isinf(rzone_lick_ratio[m])]=np.nan
-
-        for i,m in enumerate(np.unique(d['labels'])):
-
-            trial_index = d['labels'].shape[0] - d['indices'][m]
-            lickrat_ax.scatter(rzone_lick_ratio[m],trial_index,
-                               c=plt.cm.cool(np.float(m)),s=10)
-            k = Gaussian1DKernel(5)
-            lickrat_ax.plot(convolve(rzone_lick_ratio[m],k,boundary='extend'),trial_index,c=plt.cm.cool(np.float(m)))
-        lickrat_ax.set_yticklabels([])
-        lickrat_ax.set_xlabel(r'$\frac{zone_0}{zone_0 + zone_1}  $',size='xx-large')
-
-
-        for axis in [ax, meanlr_ax, lickrat_ax]:
-            for edge in ['top','right']:
-                axis.spines[edge].set_visible(False)
-
-        return f, (ax, meanlr_ax, lickrat_ax)
-    else:
-        for axis in [ax, meanlr_ax]:
-            for edge in ['top','right']:
-                axis.spines[edge].set_visible(False)
-
-        return f, (ax, meanlr_ax)
 
 
 def behavior_raster_task(lick_mat,centers,morphs,reward_pos,smooth=True, max_pos=None,TO=False):
@@ -74,8 +13,7 @@ def behavior_raster_task(lick_mat,centers,morphs,reward_pos,smooth=True, max_pos
     gs = gridspec.GridSpec(4,6)
     axarr = []
 
-    # lick x pos
-    #       colored by morph
+    # lick x pos - colored by morph
     ax = f.add_subplot(gs[:,:2])
     ax = u.smooth_raster(centers,lick_mat,vals=1-morphs,ax=ax,smooth=smooth,cmap='cool')
     ax.fill_betweenx([0,lick_mat.shape[0]+1],250,315,color=plt.cm.cool(1.),alpha=.3,zorder=0)
@@ -132,11 +70,7 @@ def behavior_raster_task(lick_mat,centers,morphs,reward_pos,smooth=True, max_pos
         for edge in ['top','right']:
             a.spines[edge].set_visible(False)
         if i>0:
-            # a.spines['left'].set_visible(False)
             a.set_yticklabels([])
-
-
-
 
     return f, axarr
 
@@ -187,21 +121,6 @@ def behavior_raster_foraging(lick_mat,centers,morphs,reward_pos,smooth=True, max
         for edge in ['top','right']:
             a.spines[edge].set_visible(False)
         if i>0:
-            # a.spines['left'].set_visible(False)
             a.set_yticklabels([])
 
-
-
-
     return f, axarr
-
-
-def ant_speed_v_lick(lick_mat,speed_mat,centers,morphs):
-    ''''''
-
-    f,ax = plt.subplots()
-
-    mask = (centers>=200) & (centers<=250)
-
-    ax.scatter(lick_mat[:,mask].sum(axis=1),speed_mat[:,mask].mean(axis=1),c=1-morphs,cmap='cool')
-    return f,ax
