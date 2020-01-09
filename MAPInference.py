@@ -29,8 +29,6 @@ def G(_g,_f):
     ''' convolve _g with _f twice. _g and _f should be of same shape '''
     return np.convolve(np.convolve(_g,_f,mode='same'),_f,mode='same')
 
-def morph_2_logstim():
-    pass
 
 def convert_prior_to_log(prior,samp = np.linspace(-.3,1.3,num=1000),plot=False):
     '''convert a prior distribution in stimulus space to logspace for proper sampling
