@@ -27,7 +27,7 @@ def mult_and_norm(dens1,dens2):
 
 def G(_g,_f):
     ''' convolve _g with _f twice. _g and _f should be of same shape '''
-    return np.convolve(np.convolve(_g,_f,mode='same'),_f,mode='same')
+    return np.convolve(np.convolve(_g,_f,mode='same'),_f,mode='same')/_f.shape[0]/_f.shape[0]
 
 
 def convert_prior_to_log(prior,samp = np.linspace(-.3,1.3,num=1000),plot=False):
@@ -89,7 +89,7 @@ def rare_prior(samp = np.linspace(-.3,1.3,num=1000),plot=False):
             [h - fig, axis handles]
     '''
     f = unif(.5,.2,samp)
-    prior = G(unif(0,.2,samp),f) + G(unif(1,.2,samp),f) + 1E-2
+    prior =  G(unif(0,.2,samp),f) + G(unif(1,.2,samp),f) + 2E-3
     prior = prior/prior.sum()
 
     if plot:
@@ -110,7 +110,7 @@ def freq_prior(samp = np.linspace(-.3,1.3,num=1000), plot = False):
     '''
 
     f = unif(.5,.2,samp)
-    prior = G(unif(0,.2,samp),f) + G(unif(.25,.2,samp),f) + G(unif(.5,.2,samp),f) + G(unif(.75,.2,samp),f) + G(unif(1,.2,samp),f)+1E-2
+    prior = G(unif(0,.2,samp),f) + G(unif(.25,.2,samp),f) + G(unif(.5,.2,samp),f) + G(unif(.75,.2,samp),f) + G(unif(1,.2,samp),f)+1E-3
     prior =prior/prior.sum()
 
     if plot:

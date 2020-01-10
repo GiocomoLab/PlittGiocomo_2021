@@ -183,22 +183,6 @@ def spatial_info(frmap,occupancy):
     P_map = P_map/P_map.mean(axis=0)
     SI = ((P_map*occupancy[:,np.newaxis])*np.log2(P_map)).sum(axis=0) # Skaggs and McNaughton spatial information
 
-
-def spatial_info(frmap,occupancy):
-    '''calculate spatial information bits/spike for many cells
-    inputs: frmap - [positions, neurons] firing rate map across position
-            occupancy - [positions,] fractional occupancy of each bin
-    outpus: SI - spatial information for each cell '''
-
-    ncells = frmap.shape[1]
-    ### vectorizing
-    P_map = frmap #- np.amin(frmap)+.001
-    P_map = P_map/P_map.mean(axis=0)
-    arg = P_map*occupancy[:,np.newaxis]
-    denom = arg.sum(axis=0)
-    SI = (arg*np.log2(P_map)).sum(axis=0)
->>>>>>> 17d8a7f1f8cb25e6089b366023c62f6aa9c0c990
-
     return SI
 
 
