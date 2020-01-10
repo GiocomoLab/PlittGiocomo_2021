@@ -89,7 +89,7 @@ def rare_prior(samp = np.linspace(-.3,1.3,num=1000),plot=False):
             [h - fig, axis handles]
     '''
     f = unif(.5,.2,samp)
-    prior =  G(unif(0,.2,samp),f) + G(unif(1,.2,samp),f) + 2E-3
+    prior =  G(unif(0,.2,samp),f) + G(unif(1,.2,samp),f) + 1E-4
     prior = prior/prior.sum()
 
     if plot:
