@@ -70,7 +70,7 @@ def convert_prior_to_log(prior,samp = np.linspace(-.3,1.3,num=1000),plot=False):
         ax[0].set_xlabel('$S$')
 
         ax[1].plot(samp,prior,color='black')
-        ax[1].plot(morph_2_logstim(samp),log_dens,color='red')
+        ax[1].plot(samp,log_dens,color='red')
         ax[1].set_ylabel('$P(S)$')
         ax[1].set_xlabel('$S$')
         ax[1].set_yticks([])
