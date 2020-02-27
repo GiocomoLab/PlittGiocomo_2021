@@ -291,11 +291,6 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
             co, c = sp.stats.mode(sub_frame['clickOn'],nan_policy='omit')
             clickOn[i]=co
 
-            lick_mask = sub_frame.lick>0
-            pos_lick_mask = lick_mask & (zone0_mask | zone1_mask)
-            pos_licks = sub_frame.loc[pos_lick_mask,'pos']
-            if pos_licks.shape[0]>0:
-                pos_lick[i] = pos_licks.iloc[0]
 
             ### discrimination task stuff
             zone0_mask = (sub_frame.pos>=rzone0[0]) & (sub_frame.pos<=rzone0[1])
@@ -304,6 +299,12 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
             zone1_licks[i] = np.nansum(sub_frame.loc[zone1_mask,'lick'])
             zone0_speed[i]=np.nanmean(sub_frame.loc[zone0_mask,'speed'])
             zone1_speed[i] = np.nanmean(sub_frame.loc[zone1_mask,'speed'])
+
+            lick_mask = sub_frame.lick>0
+            pos_lick_mask = lick_mask & (zone0_mask | zone1_mask)
+            pos_licks = sub_frame.loc[pos_lick_mask,'pos']
+            if pos_licks.shape[0]>0:
+                pos_lick[i] = pos_licks.iloc[0]
 
             if m+wj+bj<.5:
                 if rewards[i]>0 and max_pos[i]>rzone1[1]:
