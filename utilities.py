@@ -1,3 +1,4 @@
+import pdb
 import numpy as np
 import scipy as sp
 import scipy.stats
@@ -5,6 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d
 from scipy.ndimage import filters
 from astropy.convolution import convolve, Gaussian1DKernel
+
 
 ### useful general purpose functions for data analysis ###
 
@@ -185,7 +187,7 @@ def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=5,
     if mat_only:
         return np.squeeze(trial_mat)
     else:
-        return np.squeeze(trial_mat), np.squeeze(occ_mat/occ_mat.sum(axis=1)), bin_edges, bin_centers
+        return np.squeeze(trial_mat), np.squeeze(occ_mat/occ_mat.sum(axis=1)[:,np.newaxis]), bin_edges, bin_centers
 
 
 
