@@ -148,8 +148,7 @@ def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=5,
                     bin_centers - bin centers '''
 
 
-
-    ntrials = tstart.shape[0]
+    ntrials = tstart_inds.shape[0]
     if speed is not None: # mask out speeds below speed threshold
         pos[speed<speed_thr]=-1000
         arr[speed<speed_thr,:]=np.nan
