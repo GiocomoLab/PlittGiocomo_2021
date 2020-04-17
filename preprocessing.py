@@ -165,14 +165,17 @@ def build_2P_filename(mouse,date,scene,sess,serverDir = "G:\\My Drive\\2P_Data\\
 
     info_fname = os.path.join(serverDir,mouse,date,scene,"%s_*%s_*[0-9].mat" % (scene,sess))
     info_file = glob(info_fname)
-    match= glob(info_file)
-    assert len(match)<2, "2P .mat: multiple matching files"
-    if len(match)==0:
-        return None
+    if len(info_file)>0:
+        match= glob(info_file[0])
+        assert len(match)<2, "2P .mat: multiple matching files"
+        if len(match)==0:
+            return None
+        else:
+            return info_file[0]
     else:
-        return info_file[0]
+        return None
 
-def build_VR_filename(mouse,date,scene,session,serverDir = "G:\\My Drive\\VR_Data\\TwoTower\\"):
+def build_VR_filename(mouse,date,scene,session,serverDir = "G:\\My Drive\\VR_Data\\TwoTower\\",verbose = False):
     '''use sessions database to build filenames for behavioral data (also a
     sqlite database)
     called internally from load_session_db
@@ -184,9 +187,14 @@ def build_VR_filename(mouse,date,scene,session,serverDir = "G:\\My Drive\\VR_Dat
 
     if len(file)==1:
         return file[0]
+    elif len(file)>1:
+        if verbose:
+            print("%s\\%s\\%s\\%s_%s.sqlite" % (serverDir, mouse, date, scene, session))
+            print("file doesn't exist or multiples, errors to come!!!")
     else:
-        print("%s\\%s\\%s\\%s_%s.sqlite" % (serverDir, mouse, date, scene, session))
-        print("file doesn't exist or multiples, errors to come!!!")
+        if verbose:
+            print("%s\\%s\\%s\\%s_%s.sqlite" % (serverDir, mouse, date, scene, session))
+            print("file doesn't exist or multiples, errors to come!!!")
 
 def behavior_dataframe(filenames,scanmats=None,concat = True):
     '''Load a list of vr sessions given filenames. Capable of concatenating for
