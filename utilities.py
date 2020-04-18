@@ -172,6 +172,7 @@ def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=5,
     for trial in range(int(ntrials)): # for each trial
             # get trial indices
             firstI, lastI = tstart_inds[trial], tstop_inds[trial]
+            
             arr_t,pos_t = arr[firstI:lastI,:], pos[firstI:lastI]
             if perm: # circularly permute if desired
                 pos_t = np.roll(pos_t,np.random.randint(pos_t.shape[0]))

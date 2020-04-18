@@ -126,10 +126,7 @@ def load_session_db(dir = "G:\\My Drive\\"):
 
     # build folders for 2P data locations
     # .mat
-    df['scanmat'] = [build_2P_filename(df['MouseName'].iloc[i],
-                                        df['DateFolder'].iloc[i],
-                                        df['Track'].iloc[i],
-                                        df['SessionNumber'].iloc[i],serverDir=twop_dir) for i in range(df.shape[0])]
+    df['scanmat'] = [build_2P_filename(df.iloc[i],serverDir=twop_dir) for i in range(df.shape[0])]
     # add s2p filefolder
     df['s2pfolder']=[build_s2p_folder(df.iloc[i],serverDir=twop_dir) for i in range(df.shape[0])]
 
@@ -156,13 +153,13 @@ def build_s2p_folder(df,serverDir="G:\\My Drive\\2P_Data\\TwoTower\\"):
 
 
 
-def build_2P_filename(mouse,date,scene,sess,serverDir = "G:\\My Drive\\2P_Data\\TwoTower\\"):
+def build_2P_filename(df,serverDir = "G:\\My Drive\\2P_Data\\TwoTower\\"):
     ''' use sessions database inputs to build appropriate filenames for 2P data
     called internally from load_session_db
     inputs: same as build_s2p_folder
     outputs: path to Neurolabware *.mat file'''
 
-
+    mouse,date,scene,sess = df["MouseName"],df["DateFolder"],df["Track"],df["SessionNumber"]
     info_fname = os.path.join(serverDir,mouse,date,scene,"%s_*%s_*[0-9].mat" % (scene,sess))
     info_file = glob(info_fname)
     if len(info_file)>0:

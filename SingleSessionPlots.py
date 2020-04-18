@@ -55,7 +55,7 @@ def single_session_figs(sess,dir = "G:\\My Drive\\Figures\\TwoTower\\SingleSessi
 
 
     # load everything up
-    VRDat, C, S, A = pp.load_scan_sess(sess,fneu_coeff=.7,analysis='s2p')
+    VRDat, C, S, A = pp.load_scan_sess(sess,fneu_coeff=.7)
 
     if dFF:
         S = C/1546 # scaling down for better behavior; 1546 = 10*frame rate
