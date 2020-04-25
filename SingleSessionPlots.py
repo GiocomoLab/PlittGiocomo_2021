@@ -67,8 +67,8 @@ def single_session_figs(sess,dir = "G:\\My Drive\\Figures\\TwoTower\\SingleSessi
     # get trial by trial info
     trial_info, tstart_inds, teleport_inds = u.by_trial_info(VRDat)
     S_trial_mat, occ_trial_mat, edges,centers = u.make_pos_bin_trial_matrices(S,
-                                                VRDat['pos']._values,VRDat['tstart']._values,
-                                                VRDat['teleport']._values,bin_size=10,
+                                                VRDat['pos']._values,tstart_inds,
+                                                teleport_inds,bin_size=10,
                                                 speed = VRDat['speed']._values)
     S_trial_mat[np.isnan(S_trial_mat)]=0
     S_morph_dict = u.trial_type_dict(S_trial_mat,trial_info['morphs'])

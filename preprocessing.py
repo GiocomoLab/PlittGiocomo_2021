@@ -204,7 +204,7 @@ def behavior_dataframe(filenames,scanmats=None,concat = True):
     outpus:
         df/frames - [aligned][concatenated] VR dataframe/list of VR dataframes
     '''
-
+    # print(filenames)
     # if there is imaging data
     if scanmats is None:
         # if multiple sessions
@@ -418,7 +418,7 @@ def _get_frame(f,fix_teleports=True):
         tstart_inds = np.append([0],teleport_inds[:-1]+1)
 
         for ind in range(tstart_inds.shape[0]):  # for teleports
-            while (pos[tstart_inds[ind]]<0) or (pos[tstart_inds[ind]]>5) : # while position is negative
+            while (pos[tstart_inds[ind]]<0) : # while position is negative
                 if tstart_inds[ind] < pos.shape[0]-1: # if you haven't exceeded the vector length
                     tstart_inds[ind]=tstart_inds[ind]+ 1 # go up one index
                 else: # otherwise you should be the last teleport and delete this index

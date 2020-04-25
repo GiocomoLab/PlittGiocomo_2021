@@ -10,6 +10,43 @@ from astropy.convolution import convolve, Gaussian1DKernel
 
 ### useful general purpose functions for data analysis ###
 
+def similarity_fraction(S_trial_mat,trial_info):
+    #temporarily this function is actuallly calculating coding direction
+    S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,1,axis=1) # smooth position by 1 bin
+
+    #flatten to be trial x positions*neurons
+    S_tmat = np.reshape(S_trial_mat,[S_trial_mat.shape[0],-1])
+     # divide trials by l2-norm
+    S_tmat = S_tmat/np.linalg.norm(S_tmat,ord=2,axis=-1)[:,np.newaxis]
+
+    sf = np.zeros(trial_info['morphs'].shape[0]) # similarity fraction
+    for trial in range(trial_info['morphs'].shape[0]): # for each trial
+        # get masks for centroids
+        mask0 = trial_info['morphs']==0
+        mask1 = trial_info['morphs']==1
+        # if current trial is in mask, exclude it
+        if trial_info['morphs'][trial]==0:
+            mask0[trial]=False
+        elif trial_info['morphs'][trial]==1:
+            mask1[trial]=False
+
+        # calculate centroids
+        centroid0, centroid1 = np.nanmean(S_tmat[mask0,:],axis=0), np.nanmean(S_tmat[mask1,:],axis=0)
+        # cd = centroid1 - centroid0
+        # cd = cd/np.linalg.norm(cd,ord=2)
+        centroid0=centroid0/np.linalg.norm(centroid0,ord=2)
+        centroid1=centroid1/np.linalg.norm(centroid1,ord=2)
+
+
+
+        # similarity to two centroids
+        angle0,angle1 = np.dot(S_tmat[trial,:],centroid0),np.dot(S_tmat[trial,:],centroid1)
+        # whole trial similarity fraction
+        sf[trial] = angle1/(angle0+angle1)
+        # sf[trial] = np.dot(cd,S_tmat[trial,:])
+    return sf
+
+
 def _first_sess_gen(mlist,fs, default_first = 5):
     '''create list of first sessions to allow flexible inputs in other functions
     inputs: mlist - list of mice
@@ -172,7 +209,7 @@ def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=5,
     for trial in range(int(ntrials)): # for each trial
             # get trial indices
             firstI, lastI = tstart_inds[trial], tstop_inds[trial]
-            
+
             arr_t,pos_t = arr[firstI:lastI,:], pos[firstI:lastI]
             if perm: # circularly permute if desired
                 pos_t = np.roll(pos_t,np.random.randint(pos_t.shape[0]))
