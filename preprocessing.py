@@ -28,9 +28,10 @@ def loadmat_sbx(filename):
         info['nChan'] = 1; factor = 2
 
      # Determine number of frames in whole file
-    info['max_idx'] = int(os.path.getsize(filename[:-4] + '.sbx')/info['recordsPerBuffer']/info['sz'][1]*factor/4-1)
-    info['fr'] = info['resfreq']/info['recordsPerBuffer']
+    info['max_idx'] = int(os.path.getsize(filename[:-4] + '.sbx')/info['recordsPerBuffer']/info['sz'][1]*factor/4/(2-info['scanmode'])-1)
+    info['fr']=info['resfreq']/info['config']['lines']*(2-info['scanmode'])
     return info
+
 
 def _check_keys(dict):
     '''
@@ -259,6 +260,7 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
 
     info = loadmat_sbx(infofile) # load .mat file with ttl times
     fr = info['fr'] # frame rate
+    # print(info)
     lr = fr*n_lines # line rate
 
     ## on Feb 6, 2019 noticed that AA's new National Instruments board
@@ -303,6 +305,8 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
     # print(ttl_times.shape,vr_dframe.shape)
 
     # linear interpolation of position
+    print(ttl_times[0],ttl_times[-1])
+    print(ca_time[mask][0],ca_time[mask][-1])
     f_mean = sp.interpolate.interp1d(ttl_times,vr_dframe['pos']._values,axis=0,kind='slinear')
     ca_df.loc[mask,'pos'] = f_mean(ca_time[mask])
     ca_df.loc[~mask,'pos']=-500.
