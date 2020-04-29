@@ -216,12 +216,13 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
     # split into morph specific arrays
     C_morph_dict = u.trial_type_dict(C_trial_mat,morphs)
     occ_morph_dict = u.trial_type_dict(occ_trial_mat,morphs)
-    tstart_inds, teleport_inds = np.where(tstart_inds==1)[0], np.where(teleport_inds==1)[0]
+    # tstart_inds, teleport_inds = np.where(tstart_inds==1)[0], np.where(teleport_inds==1)[0]
     tstart_morph_dict = u.trial_type_dict(tstart_inds,morphs)
     teleport_morph_dict = u.trial_type_dict(teleport_inds,morphs)
 
     # for each morph value
     FR,masks,SI = {}, {}, {}
+    # shuffled_SI=None
     for m in morphlist:
 
         FR[m]= {}
@@ -255,7 +256,7 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
         SI[m]['bootstrap']= np.median(SI_bs,axis=0).ravel() # take the true SI as the median of the bootstrapped estimates
         p_bs, shuffled_SI = spatial_info_perm_test(SI[m]['bootstrap'],C, # permutation test
                                 position,tstart_morph_dict[m],teleport_morph_dict[m],
-                                nperms=1000,win_trial=win_trial_perm)
+                                nperms=100,win_trial=win_trial_perm)
         masks[m] = p_bs>pthr # hypothesis test
 
     return masks, FR, SI
@@ -278,7 +279,7 @@ def spatial_info_perm_test(SI,C,position,tstart,tstop,nperms = 10000,shuffled_SI
     '''
     if len(C.shape)<2: # if only considering one cell, expand dimensions
         C = C[:,np.newaxis]
-
+    print(tstart,tstop)
     if shuffled_SI is None:
         shuffled_SI = np.zeros([nperms,C.shape[1]])
         for perm in range(nperms): # for each permutation
@@ -287,6 +288,7 @@ def spatial_info_perm_test(SI,C,position,tstart,tstop,nperms = 10000,shuffled_SI
                 C_tmat, occ_tmat, edes,centers = u.make_pos_bin_trial_matrices(C,position,tstart,tstop,perm=True)
             else:
                 C_perm = np.roll(C,randrange(30,position.shape[0],30),axis=0) # perform permutation over whole time series
+                # print(tstart,tstop)
                 C_tmat, occ_tmat, edes,centers = u.make_pos_bin_trial_matrices(C,position,tstart,tstop,perm=False)
 
             fr, occ = np.squeeze(np.nanmean(C_tmat,axis=0)), occ_tmat.sum(axis=0) # average firing rate and occupancy
