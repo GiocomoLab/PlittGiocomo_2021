@@ -6,18 +6,48 @@ import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d
 from scipy.ndimage import filters
 from astropy.convolution import convolve, Gaussian1DKernel
+import sklearn as sk
+from sklearn import neighbors
 
 
 ### useful general purpose functions for data analysis ###
-
-def similarity_fraction(S_trial_mat,trial_info):
-    #temporarily this function is actuallly calculating coding direction
+def generalized_similarity_fraction(S_trial_mat,morphs,s = np.linspace(-.1,1.1,num=50),argmax=True):
     S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,1,axis=1) # smooth position by 1 bin
 
     #flatten to be trial x positions*neurons
     S_tmat = np.reshape(S_trial_mat,[S_trial_mat.shape[0],-1])
      # divide trials by l2-norm
-    S_tmat = S_tmat/np.linalg.norm(S_tmat,ord=2,axis=-1)[:,np.newaxis]
+    S_tmat_norm = S_tmat/np.linalg.norm(S_tmat,ord=2,axis=-1)[:,np.newaxis]
+
+    gsf = np.zeros((morphs.shape[0],s.shape[0])) # similarity fraction
+    for trial in range(morphs.shape[0]): # for each trial
+        trainmask = np.ones((S_tmat.shape[0],))
+        trainmask[trial]=0
+        trainmask = trainmask>0
+
+        # fit NN regressor
+        knnr = sk.neighbors.KNeighborsRegressor(n_neighbors=10)
+        knnr.fit(morphs[trainmask,np.newaxis],S_tmat[trainmask,:])
+
+        centroids = knnr.predict(s[:,np.newaxis])
+        centroids = centroids/np.linalg.norm(centroids,ord=2,axis=1,keepdims=True)
+
+        gsf[trial,:] = np.dot(centroids,S_tmat_norm[trial,:].T)
+
+    gsf = gsf/gsf.sum(axis=1,keepdims=True)
+    if argmax:
+        return s[np.argmax(gsf,axis=1)]
+    else:
+        return gsf
+
+def similarity_fraction(S_trial_mat,trial_info):
+
+    S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,1,axis=1) # smooth position by 1 bin
+
+    #flatten to be trial x positions*neurons
+    S_tmat = np.reshape(S_trial_mat,[S_trial_mat.shape[0],-1])
+     # divide trials by l2-norm
+    S_tmat_norm = S_tmat/np.linalg.norm(S_tmat,ord=2,axis=-1)[:,np.newaxis]
 
     sf = np.zeros(trial_info['morphs'].shape[0]) # similarity fraction
     for trial in range(trial_info['morphs'].shape[0]): # for each trial
@@ -40,7 +70,7 @@ def similarity_fraction(S_trial_mat,trial_info):
 
 
         # similarity to two centroids
-        angle0,angle1 = np.dot(S_tmat[trial,:],centroid0),np.dot(S_tmat[trial,:],centroid1)
+        angle0,angle1 = np.dot(S_tmat_norm[trial,:],centroid0),np.dot(S_tmat_norm[trial,:],centroid1)
         # whole trial similarity fraction
         sf[trial] = angle1/(angle0+angle1)
         # sf[trial] = np.dot(cd,S_tmat[trial,:])
