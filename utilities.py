@@ -61,7 +61,7 @@ def similarity_fraction(S_trial_mat,trial_info):
             mask1[trial]=False
 
         # calculate centroids
-        centroid0, centroid1 = np.nanmean(S_tmat[mask0,:],axis=0), np.nanmean(S_tmat[mask1,:],axis=0)
+        centroid0, centroid1 = np.nanmean(S_tmat_norm[mask0,:],axis=0), np.nanmean(S_tmat_norm[mask1,:],axis=0)
         # cd = centroid1 - centroid0
         # cd = cd/np.linalg.norm(cd,ord=2)
         centroid0=centroid0/np.linalg.norm(centroid0,ord=2)
