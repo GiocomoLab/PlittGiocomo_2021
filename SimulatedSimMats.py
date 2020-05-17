@@ -14,11 +14,11 @@ from sklearn.linear_model import HuberRegressor as hreg
 
 
 
-def calculate_posterior(prior,morphs,xx_lims = (-.1,1.1), sigma_likelihood=.3):
+def calculate_posterior(prior,morphs,xx_lims = (-.1,1.1), sigma_likelihood=.3,calcZ=False):
     '''
     calculate posterior distribution for different morph values.
     likelihood is assumed to be gaussian with width
-    morphs are assumed to be uncorrected wall morph values
+    morphs are assumed to be corrected wall morph values
 
     inputs: prior - [1, N] numpy array with PMF of prior distribution sampled at
                     evenly spaced intervals between xx_lims[0] and xx_lims[1]
@@ -34,9 +34,13 @@ def calculate_posterior(prior,morphs,xx_lims = (-.1,1.1), sigma_likelihood=.3):
 
     assert (prior.shape[0]==1), "prior is wrong shape, must be 1 x N"
     xx = np.linspace(xx_lims[0],xx_lims[1],num=prior.size) # samples
-    post = prior*u.gaussian(unity.wallmorphx(morphs[:,np.newaxis]),sigma_likelihood,xx[np.newaxis,:]) # prior x likelihood
+    post = prior*u.gaussian(morphs[:,np.newaxis],sigma_likelihood,xx[np.newaxis,:]) # prior x likelihood
+    Z = post.sum(axis=1)
     post = post/post.sum(axis=1,keepdims=True) # normalize to be a valid distribution
-    return post, xx
+    if calcZ:
+        return post, xx, Z
+    else:
+        return post, xx
 
 def make_sampling_spline(xx,prob):
     '''
@@ -57,7 +61,7 @@ def simulate_session(prior,morphs, n_neurons=100,n_samps=1,rbf_sigma=.4,alpha = 
     simulate a set of gamma neurons that encode samples from a posterior distribution
     inputs: prior - [1 , N] numpy array, probability mass funciton sampled evenly over interval specified in xx_lims
                     assumed that this is in corrected wall morph space
-            morphs - [M,] numpy array of uncorrected wall morph values over which to calculate the posterior distribution
+            morphs - [M,] numpy array of corrected wall morph values over which to calculate the posterior distribution
             n_neurons - number of neurons in simulation, modeled as cells with gamma activity. The shape parameter is
                     determined by radial basis function tuning for different values of the stimulus. Each cell has a different
                     preferred stimulus
@@ -170,7 +174,7 @@ def run_simmat_distributions(sess,rare_prior,freq_prior,nperms=1000,n_samps=1,rb
     SIMDATA,SIMDATA_SM,SIMDATA_SF = {},{},{}
     for prior,name in zip([rare_prior,freq_prior],['rare','freq']):
         print(name)
-        sd,sdsm,sdsf = simmat_distribution(morphs,prior,nperms=nperms,n_neurons=S_trial_mat.shape[-1])
+        sd,sdsm,sdsf = simmat_distribution(unity.wallmorphx(morphs),prior,nperms=nperms,n_neurons=S_trial_mat.shape[-1])
         SIMDATA[name],SIMDATA_SM[name], SIMDATA_SF[name]= sd, sdsm,sdsf
     return morphs,S_trial_mat, np.dot(S_tmat_norm,S_tmat_norm.T), u.similarity_fraction(S_trial_mat,trial_info), SIMDATA, SIMDATA_SM, SIMDATA_SF
 
