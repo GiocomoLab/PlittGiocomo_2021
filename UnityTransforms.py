@@ -29,6 +29,9 @@ def wallmorphx(s):
     '''rescale x frequency to be in range of "morphs" '''
     return 1.2*(xfreq(s)-xfreq(-.1))/(xfreq(1.1)-xfreq(-.1))-.1
 
+def inv_wallmorphx(m):
+    return (m+.1)*(xfreq(1.1)-xfreq(-.1))/1.2 + xfreq(-.1)
+
 def wallmorphy(s):
     '''rescale y frequency to be in range of "morphs" '''
     return 1.2*(yfreq(s)-yfreq(-.1))/(yfreq(1.1)-yfreq(-.1))-.1
