@@ -30,8 +30,8 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
     f = plt.figure(figsize=[30,12])
     gs = gridspec.GridSpec(14,30)
 
-    effMorph = trial_info['morphs'] + trial_info['wallJitter'] + trial_info['bckgndJitter'] + trial_info['towerJitter']
-    effMorph = (effMorph+.3)/1.6
+    effMorph = trial_info['morphs'] + trial_info['wallJitter'] #+ trial_info['bckgndJitter'] + trial_info['towerJitter']
+    effMorph = (effMorph+.1)/1.2
     msort = np.argsort(effMorph)
 
     x=np.arange(effMorph.size)
@@ -83,6 +83,7 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
     tm_ax.set_yticks([])
 
     # sort similarity matrix by cluster - laplacian eigenmaps
+    
     clustsort = _sort_clusters(cluster_simmat(C),effMorph)
     C_csort = _sort_simmat(C,clustsort)
 

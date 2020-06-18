@@ -17,34 +17,6 @@ def gaussian(mu,sigma,x):
     return np.exp(-(mu-x)**2/sigma**2)
 
 
-# def generalized_similarity_fraction(S_trial_mat,morphs,s = np.linspace(-.1,1.1,num=50),argmax=True):
-#     S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,1,axis=1) # smooth position by 1 bin
-#
-#     #flatten to be trial x positions*neurons
-#     S_tmat = np.reshape(S_trial_mat,[S_trial_mat.shape[0],-1])
-#      # divide trials by l2-norm
-#     S_tmat_norm = S_tmat/np.linalg.norm(S_tmat,ord=2,axis=-1)[:,np.newaxis]
-#
-#     gsf = np.zeros((morphs.shape[0],s.shape[0])) # similarity fraction
-#     for trial in range(morphs.shape[0]): # for each trial
-#         trainmask = np.ones((S_tmat.shape[0],))
-#         trainmask[trial]=0
-#         trainmask = trainmask>0
-#
-#         # fit NN regressor
-#         knnr = sk.neighbors.KNeighborsRegressor(n_neighbors=10)
-#         knnr.fit(morphs[trainmask,np.newaxis],S_tmat[trainmask,:])
-#
-#         centroids = knnr.predict(s[:,np.newaxis])
-#         centroids = centroids/np.linalg.norm(centroids,ord=2,axis=1,keepdims=True)
-#
-#         gsf[trial,:] = np.dot(centroids,S_tmat_norm[trial,:].T)
-#
-#     gsf = gsf/gsf.sum(axis=1,keepdims=True)
-#     if argmax:
-#         return s[np.argmax(gsf,axis=1)]
-#     else:
-#         return gsf
 
 def similarity_fraction(S_trial_mat,trial_info):
     '''
@@ -52,7 +24,7 @@ def similarity_fraction(S_trial_mat,trial_info):
     similar to a coding direction but on unit circle
     inputs: S_trial_mat - [trials, position bins, neurons] numpy array of activity rates
             trial_info - dictionary of trial information. output of by_trial_info
-    returns: sf - [trials,] numpy array of similarity fraction 
+    returns: sf - [trials,] numpy array of similarity fraction
     '''
     S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,2,axis=1) # smooth position by 1 bin
 
@@ -73,7 +45,7 @@ def similarity_fraction(S_trial_mat,trial_info):
             mask1[trial]=False
 
         # calculate centroids
-        centroid0, centroid1 = np.nanmean(S_tmat_norm[mask0,:],axis=0), np.nanmean(S_tmat_norm[mask1,:],axis=0)
+        centroid0, centroid1 = np.nanmean(S_tmat[mask0,:],axis=0), np.nanmean(S_tmat[mask1,:],axis=0)
         # cd = centroid1 - centroid0
         # cd = cd/np.linalg.norm(cd,ord=2)
         centroid0=centroid0/np.linalg.norm(centroid0,ord=2)
@@ -86,6 +58,39 @@ def similarity_fraction(S_trial_mat,trial_info):
         # whole trial similarity fraction
         sf[trial] = angle1/(angle0+angle1)
         # sf[trial] = np.dot(cd,S_tmat[trial,:])
+    return sf
+
+def rt_similarity_fraction(S_trial_mat,trial_info):
+
+    S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,2,axis=1) # smooth position by 1 bin
+
+     # divide trials by l2-norm
+    S_tmat_norm = S_trial_mat/np.linalg.norm(S_trial_mat,ord=2,axis=-1,keepdims=True)
+
+    sf = np.zeros(S_trial_mat.shape[:2]) # similarity fraction
+    for trial in range(trial_info['morphs'].shape[0]): # for each trial
+        # get masks for centroids
+        mask0 = trial_info['morphs']==0
+        mask1 = trial_info['morphs']==1
+        # if current trial is in mask, exclude it
+        if trial_info['morphs'][trial]==0:
+            mask0[trial]=False
+        elif trial_info['morphs'][trial]==1:
+            mask1[trial]=False
+
+        # calculate centroids
+        centroid0, centroid1 = np.nanmean(S_trial_mat[mask0,:,:],axis=0), np.nanmean(S_trial_mat[mask1,:,:],axis=0)
+
+        centroid0=centroid0/np.linalg.norm(centroid0,ord=2,axis=-1,keepdims=True)
+        centroid1=centroid1/np.linalg.norm(centroid1,ord=2,axis=-1,keepdims=True)
+
+
+
+        # similarity to two centroids
+        angle0,angle1 = np.diagonal(np.matmul(S_tmat_norm[trial,:,:],centroid0.T)),np.diagonal(np.matmul(S_tmat_norm[trial,:,:],centroid1.T))
+        # whole trial similarity fraction
+        sf[trial,:] = angle1/(angle0+angle1)
+
     return sf
 
 
