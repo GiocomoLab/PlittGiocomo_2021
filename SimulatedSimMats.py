@@ -56,7 +56,7 @@ def make_sampling_spline(xx,prob):
     return spline(cum_prob,xx)
 
 
-def simulate_session(prior,morphs, n_neurons=100,n_samps=1,rbf_sigma=.4,alpha = 1., beta = .25,xx_lims = (-.1,1.1)):
+def simulate_session(prior,morphs, n_neurons=100,n_samps=1,rbf_sigma=.4,alpha = 1., beta = .25,xx_lims = (-.3,1.3)):
     '''
     simulate a set of gamma neurons that encode samples from a posterior distribution
     inputs: prior - [1 , N] numpy array, probability mass funciton sampled evenly over interval specified in xx_lims
@@ -75,6 +75,7 @@ def simulate_session(prior,morphs, n_neurons=100,n_samps=1,rbf_sigma=.4,alpha = 
             sim_data_sf - [M, ] numpy array, similarity fraction for simulated neurons
 
     '''
+
     post, xx = calculate_posterior(prior,morphs,xx_lims=xx_lims) # calculate posterior
     neurons = np.zeros([morphs.shape[0],n_neurons*n_samps]) #allocate for neual activity
     _mun = np.linspace(xx_lims[0],xx_lims[1],num=n_neurons) # evenly space means of radial basis functions along sampling limits
@@ -176,7 +177,7 @@ def run_simmat_distributions(sess,rare_prior,freq_prior,nperms=1000,n_samps=1,rb
         print(name)
         sd,sdsm,sdsf = simmat_distribution(unity.wallmorphx(morphs),prior,nperms=nperms,n_neurons=S_trial_mat.shape[-1])
         SIMDATA[name],SIMDATA_SM[name], SIMDATA_SF[name]= sd, sdsm,sdsf
-    return morphs,S_trial_mat, np.dot(S_tmat_norm,S_tmat_norm.T), u.similarity_fraction(S_trial_mat,trial_info), SIMDATA, SIMDATA_SM, SIMDATA_SF
+    return trial_info,S_trial_mat, np.dot(S_tmat_norm,S_tmat_norm.T), u.similarity_fraction(S_trial_mat,trial_info), SIMDATA, SIMDATA_SM, SIMDATA_SF
 
 
 def simulate_session_plot_results(sess,rare_prior,freq_prior,nperms=1000,n_samps=1,rbf_sigma=.4,alpha = 1., beta = .25,xx_lims = (-.1,1.1),
@@ -199,11 +200,11 @@ def simulate_session_plot_results(sess,rare_prior,freq_prior,nperms=1000,n_samps
     epsilon = 1/nperms
 
     # run simulation
-    morphs,S_trial_mat,simmat, sf, SIMDATA,SIMDATA_SM,SIMDATA_SF = run_simmat_distributions(sess,rare_prior,freq_prior,nperms=nperms,
+    trial_info,S_trial_mat,simmat, sf, SIMDATA,SIMDATA_SM,SIMDATA_SF = run_simmat_distributions(sess,rare_prior,freq_prior,nperms=nperms,
                                                                                             n_samps=n_samps,
                                                                                             rbf_sigma=rbf_sigma,alpha = alpha, beta = beta,
                                                                                             xx_lims = xx_lims)
-
+    morph = trial_info['morphs']+trial_info['wallJitter']
     # make output directory
     sessdir = os.path.join(out_dir,"%s_%s_%i" % (sess["MouseName"],sess["DateFolder"],sess["SessionNumber"]))
     try:

@@ -125,7 +125,7 @@ def reward_cell_scatterplot(fr0, fr1, rzone0 = [250,315], rzone1 = [350,415],tma
     return f, ax
 
 
-def common_cell_remap_heatmap(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10.,norm = True):
+def common_cell_remap_heatmap(fr0, fr1, rzone = [250,400], tmax= 450,bin_size=10.,norm = True):
     '''
     plot histogram of peak locations  of place field in one environment vs the other. reward zone is highlighted
     inputs: fr0 - [pos,neurons] array of average firing rate for morph 0 trials
@@ -152,21 +152,21 @@ def common_cell_remap_heatmap(fr0, fr1, rzone = [225,400], tmax= 450,bin_size=10
     if norm:
         ax.imshow(heatmap.T/np.amax(heatmap),cmap='magma',vmin=0.05,vmax=.15)#,aspect='auto')
     else:
-        ax.imshow(heatmap.T,cmap='magma',vmax=.7*np.amax(heatmap.ravel()))
+        ax.imshow(heatmap.T,cmap='magma',vmax=np.percentile(heatmap.ravel(),99))
 
     ## add marginal histograms
     ax1 = f.add_subplot(gs[-1,0:-1],sharex=ax)
     hist,edges = np.histogram(bin_size*np.argmax(fr0,axis=0),np.arange(0,tmax+10,10))
     ax1.fill_between(np.linspace(0,45,num=edges.shape[0]-1)-.5,hist/hist.sum(),color=plt.cm.cool(1.))
     ax1.set_xlim([-1,46])
-    ax1.fill_betweenx([0,.05],rzone[0]/bin_size,x2=rzone[1]/bin_size,color='black',alpha=.2)
+    ax1.fill_betweenx([0,np.amax(hist/hist.sum())],rzone[0]/bin_size,x2=rzone[1]/bin_size,color='black',alpha=.2)
 
 
     ax2 = f.add_subplot(gs[0:-1,-1],sharey=ax)
     hist,edges = np.histogram(bin_size*np.argmax(fr1,axis=0),np.arange(0,tmax+10,10))
     ax2.fill_betweenx(np.linspace(0,45,num=edges.shape[0]-1)-.5,hist/hist.sum(),color=plt.cm.cool(0.))
     ax2.set_ylim([-1,46])
-    ax2.fill_between([0,.05],rzone[0]/bin_size,y2=rzone[1]/bin_size,color='black',alpha=.2)
+    ax2.fill_between([0,np.amax(hist/hist.sum())],rzone[0]/bin_size,y2=rzone[1]/bin_size,color='black',alpha=.2)
 
 
     return f, ax
