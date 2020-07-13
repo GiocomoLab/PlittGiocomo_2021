@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 from scipy.ndimage.filters import gaussian_filter1d
-import utilities as u
-import preprocessing as pp
-import PlaceCellAnalysis as pc
-import SimilarityMatrixAnalysis as sm
+from . import utilities as u
+from . import preprocessing as pp
+from . import PlaceCellAnalysis as pc
+from . import SimilarityMatrixAnalysis as sm
 import sklearn as sk
 from sklearn.decomposition import PCA
-import behavior as b
+from . import behavior as b
 from mpl_toolkits.mplot3d import Axes3D
 import os
 import pickle

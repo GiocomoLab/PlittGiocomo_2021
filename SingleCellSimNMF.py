@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import utilities as u
-import preprocessing as pp
-import behavior as b
-import SimilarityMatrixAnalysis as sm
+from . import utilities as u
+from . import preprocessing as pp
+from . import behavior as b
+from . import SimilarityMatrixAnalysis as sm
 import scipy as sp
-import PlaceCellAnalysis as pc
+from . import PlaceCellAnalysis as pc
 import matplotlib.gridspec as gridspec
 import sklearn as sk
 import os

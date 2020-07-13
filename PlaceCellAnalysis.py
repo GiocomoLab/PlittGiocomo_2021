@@ -4,8 +4,8 @@ import scipy as sp
 from scipy.ndimage.filters import gaussian_filter1d, gaussian_filter
 from random import randrange
 import math
-import utilities as u
-import preprocessing as pp
+from . import utilities as u
+from . import preprocessing as pp
 import matplotlib.gridspec as gridspec
 
 

@@ -3,7 +3,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import scipy as sp
 import os
-import utilities as u
+from . import utilities as u
 
 
 def behavior_raster_task(trial_mat,centers,morphs,reward_pos,smooth=True, TO=False):

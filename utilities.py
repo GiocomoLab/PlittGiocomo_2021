@@ -166,7 +166,7 @@ def nansmooth(A,sig):
     One = filters.gaussian_filter(One,sig)
     return A_nanless/One
 
-def df(C,ops={'sig_baseline':10,'win_baseline':300,'sig_output':3,'method':'maximin'}):
+def dff(C,ops={'sig_baseline':10,'win_baseline':300,'sig_output':3,'method':'maximin'}):
     '''delta F / F using maximin method from Suite2P
     inputs: C - neuropil subtracted fluorescence (timepoints x neurons)
     outputs dFF - timepoints x neurons'''
