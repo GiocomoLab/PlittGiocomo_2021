@@ -194,7 +194,7 @@ def build_VR_filename(mouse,date,scene,session,serverDir = "G:\\My Drive\\VR_Dat
             print("%s\\%s\\%s\\%s_%s.sqlite" % (serverDir, mouse, date, scene, session))
             print("file doesn't exist or multiples, errors to come!!!")
 
-def behavior_dataframe(filenames,scanmats=None,concat = True):
+def behavior_dataframe(filenames,scanmats=None,concat = True,fix_teleports=True):
     '''Load a list of vr sessions given filenames. Capable of concatenating for
     averaging data across sessions. If scanmats is not None, aligns VR data to
     imaging data.
@@ -213,7 +213,7 @@ def behavior_dataframe(filenames,scanmats=None,concat = True):
             frames = [_VR_interp(_get_frame(f)) for f in filenames] # load data and interpolate onto even time grid
             df = pd.concat(frames,ignore_index=True) # concatenate data
         else: #load single session
-            df = _VR_interp(_get_frame(filenames))
+            df = _VR_interp(_get_frame(filenames,fix_teleports=fix_teleports))
         df['trial number'] = np.cumsum(df['teleport']) # fix trial numbers
 
         if isinstance(filenames,list):
@@ -231,10 +231,10 @@ def behavior_dataframe(filenames,scanmats=None,concat = True):
                 raise Exception("behavior and scanfile lists must be of the same length")
             else:
                 # load and align all VR data
-                frames = [_VR_align_to_2P(_get_frame(f),s) for (f,s) in zip(filenames,scanmats)]
+                frames = [_VR_align_to_2P(_get_frame(f,fix_teleports=fix_teleports),s) for (f,s) in zip(filenames,scanmats)]
                 df = pd.concat(frames,ignore_index=True)
         else:
-            df = _VR_align_to_2P(_get_frame(filenames),scanmats)
+            df = _VR_align_to_2P(_get_frame(filenames,fix_teleports=fix_teleports),scanmats)
 
         df['trial number'] = np.cumsum(df['teleport'])
 
@@ -351,6 +351,101 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
     # replace nans with 0s
     ca_df[['reward','tstart','teleport','lick','clickOn','towerJitter','wallJitter','bckgndJitter']].fillna(value=0,inplace=True)
     return ca_df
+
+def _VR_align_to_2P_FlashLED(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
+    '''align VR behavior data to 2P sample times using splines. called internally
+    from behavior_dataframe if scanmat exists
+    inputs:
+        vr_dframe- VR pandas dataframe loaded directly from .sqlite file
+        infofile- path
+        n_imaging_planes- number of imaging planes (not implemented)
+        n_lines - number of lines collected during each frame (default 512.)
+    outputs:
+        ca_df - calcium imaging aligned VR data frame (pandas dataframe)
+    '''
+
+    info = loadmat_sbx(infofile) # load .mat file with ttl times
+    fr = info['fr'] # frame rate
+    lr = fr*n_lines # line rate
+
+
+    orig_ttl_times = info['frame']/fr + info['line']/lr # including error ttls
+    dt_ttl = np.diff(np.insert(orig_ttl_times,0,0)) # insert zero at beginning and calculate delta ttl time
+    tmp = np.zeros(dt_ttl.shape)
+    tmp[dt_ttl<.005] = 1 # find ttls faster than 200 Hz (unrealistically fast - probably a ttl which bounced to ground)
+    # ensured outside of this script that this finds the true start ttl on every scan
+    mask = np.insert(np.diff(tmp),0,0) # find first ttl in string that were too fast
+    mask[mask<0] = 0
+    print('num aberrant ttls',tmp.sum())
+
+    frames = info['frame'][mask==0] # should be the original ttls up to a 1 VR frame error
+    lines = info['line'][mask==0]
+
+    ##
+    ##
+
+    # times of each ttl (VR frame)
+    ttl_times = frames/fr + lines/lr
+    numVRFrames = frames.shape[0]
+
+    # create empty pandas dataframe to store calcium aligned data
+    ca_df = pd.DataFrame(columns = vr_dframe.columns, index = np.arange(info['max_idx']))
+    ca_time = np.arange(0,1/fr*info['max_idx'],1/fr) # time on this even grid
+    if (ca_time.shape[0]-ca_df.shape[0])==1: # occaionally a 1 frame correction due to
+                                            # scan stopping mid frame
+        print('one frame correction')
+        ca_time = ca_time[:-1]
+
+
+    ca_df.loc[:,'time'] = ca_time
+    mask = ca_time>=ttl_times[0] # mask for when ttls have started on imaging clock
+                                # (i.e. imaging started and stabilized, ~10s)
+
+    # take VR frames for which there are valid TTLs
+    vr_dframe = vr_dframe.iloc[-numVRFrames:]
+    # print(ttl_times.shape,vr_dframe.shape)
+
+    # linear interpolation of position
+    print(ttl_times[0],ttl_times[-1])
+    print(ca_time[mask][0],ca_time[mask][-1])
+
+    near_list = ['LEDCue']
+    f_nearest = sp.interpolate.interp1d(ttl_times,vr_dframe[near_list]._values,axis=0,kind='nearest')
+    ca_df.loc[mask,near_list] = f_nearest(ca_time[mask])
+    ca_df.fillna(method='ffill',inplace=True)
+    ca_df.loc[~mask,near_list]=-1.
+
+    # integrate, interpolate and then take difference, to make sure data is not lost
+    cumsum_list = ['dz','lick','reward','gng','manrewards']
+    f_cumsum = sp.interpolate.interp1d(ttl_times,np.cumsum(vr_dframe[cumsum_list]._values,axis=0),axis=0,kind='slinear')
+    ca_cumsum = np.round(np.insert(f_cumsum(ca_time[mask]),0,[0, 0,0 ,0,0],axis=0))
+    if ca_cumsum[-1,-2]<ca_cumsum[-1,-3]:
+        ca_cumsum[-1,-2]+=1
+
+
+    ca_df.loc[mask,cumsum_list] = np.diff(ca_cumsum,axis=0)
+    ca_df.loc[~mask,cumsum_list] = 0.
+
+
+
+    # smooth instantaneous speed
+    k = Gaussian1DKernel(5)
+    cum_dz = convolve(np.cumsum(ca_df['dz']._values),k,boundary='extend')
+    ca_df['dz'] = np.ediff1d(cum_dz,to_end=0)
+
+
+    ca_df['speed'].interpolate(method='linear',inplace=True)
+    ca_df['speed']=np.array(np.divide(ca_df['dz'],np.ediff1d(ca_df['time'],to_begin=1./fr)))
+    ca_df['speed'].iloc[0]=0
+
+    # calculate and smooth lick rate
+    ca_df['lick rate'] = np.array(np.divide(ca_df['lick'],np.ediff1d(ca_df['time'],to_begin=1./fr)))
+    ca_df['lick rate'] = convolve(ca_df['lick rate']._values,k,boundary='extend')
+
+    # replace nans with 0s
+    ca_df[['reward','lick']].fillna(value=0,inplace=True)
+    return ca_df
+
 
 def _VR_interp(frame):
     '''if 2P data doesn't exist interpolates behavioral data onto an even grid
