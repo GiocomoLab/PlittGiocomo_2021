@@ -210,7 +210,7 @@ def lick_positions(licks,position):
     return lickpos
 
 
-def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=5,
+def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=10,
                                 max_pos=450,speed=None,speed_thr=2, perm=False,
                                 mat_only = False):
     '''make a ntrials x position [x neurons] matrix[/tensor]---heavily used

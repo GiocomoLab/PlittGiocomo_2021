@@ -8,7 +8,7 @@ from datetime import datetime
 from glob import glob
 import os.path
 from astropy.convolution import convolve, Gaussian1DKernel
-from . import utilities as u
+import utilities as u
 
 def loadmat_sbx(filename):
     '''
@@ -90,7 +90,7 @@ def load_scan_sess(sess,plane=0,fneu_coeff=.7):
     S = np.load(os.path.join(folder,'spks.npy')) # deconvolved activity rate
     F_ = F-fneu_coeff*Fneu #neuropil correction
     C=F_[iscell[:,0]>0,:].T
-    C = u.df(C) # dF/F
+    C = u.dff(C) # dF/F
     S=S[iscell[:,0 ]>0,:].T
     frame_diff = VRDat.shape[0]-C.shape[0] # make sure that VR data and imaging data are the same length
     print('frame diff',frame_diff)
