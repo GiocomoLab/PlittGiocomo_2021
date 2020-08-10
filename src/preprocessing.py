@@ -8,7 +8,7 @@ from datetime import datetime
 from glob import glob
 import os.path
 from astropy.convolution import convolve, Gaussian1DKernel
-import utilities as u
+from . import utilities as u
 
 def loadmat_sbx(filename):
     '''

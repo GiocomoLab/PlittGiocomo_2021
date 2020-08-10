@@ -3,9 +3,9 @@ import scipy as sp
 from scipy import signal
 import sklearn as sk
 from sklearn import neighbors
-import preprocessing as pp
-import utilities as u
-import UnityTransforms as unity
+from . import preprocessing as pp
+from . import utilities as u
+from . import UnityTransforms as unity
 from matplotlib import pyplot as plt
 import pickle
 import os
