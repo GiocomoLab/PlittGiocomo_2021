@@ -60,9 +60,10 @@ def similarity_fraction(S_trial_mat,trial_info):
         # sf[trial] = np.dot(cd,S_tmat[trial,:])
     return sf
 
-def rt_similarity_fraction(S_trial_mat,trial_info):
+def rt_similarity_fraction(S_trial_mat,trial_info,sigma=2):
 
-    S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,2,axis=1) # smooth position by 1 bin
+    if sigma>0:
+        S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,sigma,axis=1) # smooth position by 1 bin
 
      # divide trials by l2-norm
     S_tmat_norm = S_trial_mat/np.linalg.norm(S_trial_mat,ord=2,axis=-1,keepdims=True)

@@ -83,7 +83,7 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
     tm_ax.set_yticks([])
 
     # sort similarity matrix by cluster - laplacian eigenmaps
-    
+
     clustsort = _sort_clusters(cluster_simmat(C),effMorph)
     C_csort = _sort_simmat(C,clustsort)
 
@@ -115,7 +115,7 @@ def cluster_simmat(C):
 
         spectclust = clust.SpectralClustering(n_clusters=c,affinity='precomputed')
         labels = spectclust.fit_predict(C)
-        s=sk.metrics.silhouette_score(1-C,labels,metric='precomputed')
+        s=sk.metrics.silhouette_score(np.maximum(1-C,0),labels,metric='precomputed')
         score.append(np.floor(100.*s)) # round silhouette_score
         print(s*100.)
 
