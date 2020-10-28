@@ -27,8 +27,11 @@ def loadmat_sbx(filename):
     elif info['channels'] == 3:
         info['nChan'] = 1; factor = 2
 
+    if info['scanmode'] == 0:
+        info['recordsPerBuffer'] *= 2
+
      # Determine number of frames in whole file
-    info['max_idx'] = int(os.path.getsize(filename[:-4] + '.sbx')/info['recordsPerBuffer']/info['sz'][1]*factor/4/(2-info['scanmode'])-1)
+    info['max_idx'] = int(os.path.getsize(filename[:-4] + '.sbx')/info['recordsPerBuffer']/info['sz'][1]*factor/4-1)
     info['fr']=info['resfreq']/info['config']['lines']*(2-info['scanmode'])
     return info
 
@@ -260,7 +263,8 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
 
     info = loadmat_sbx(infofile) # load .mat file with ttl times
     fr = info['fr'] # frame rate
-    # print(info)
+
+    print('frame_rate',fr)
     lr = fr*n_lines # line rate
 
     ## on Feb 6, 2019 noticed that AA's new National Instruments board
@@ -312,7 +316,7 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
     ca_df.loc[~mask,'pos']=-500.
 
     # nearest frame interpolation
-    near_list = ['morph','clickOn','towerJitter','wallJitter','bckgndJitter']
+    near_list = ['morph','towerJitter','wallJitter','bckgndJitter']
     f_nearest = sp.interpolate.interp1d(ttl_times,vr_dframe[near_list]._values,axis=0,kind='nearest')
     ca_df.loc[mask,near_list] = f_nearest(ca_time[mask])
     ca_df.fillna(method='ffill',inplace=True)
@@ -349,7 +353,7 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
     ca_df['lick rate'] = convolve(ca_df['lick rate']._values,k,boundary='extend')
 
     # replace nans with 0s
-    ca_df[['reward','tstart','teleport','lick','clickOn','towerJitter','wallJitter','bckgndJitter']].fillna(value=0,inplace=True)
+    ca_df[['reward','tstart','teleport','lick','towerJitter','wallJitter','bckgndJitter']].fillna(value=0,inplace=True)
     return ca_df
 
 def _VR_align_to_2P_FlashLED(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):

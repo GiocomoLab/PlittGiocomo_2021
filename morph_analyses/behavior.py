@@ -108,7 +108,7 @@ def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rz
     ax = f.add_subplot(gs[:,:2])
     ax = u.smooth_raster(centers,trial_mat,vals=1-morphs,ax=ax,smooth=smooth,cmap='cool')
     # highlight possible reward zone
-    ax.fill_betweenx([0,trial_mat.shape[0]+1],225,400,color='black',alpha=.3,zorder=0)
+    ax.fill_betweenx([0,trial_mat.shape[0]+1],rzone[0],rzone[1],color='black',alpha=.3,zorder=0)
     ax.set_ylabel('Trial',size='xx-large')
     axarr.append(ax)
 
@@ -117,14 +117,14 @@ def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rz
     ax = f.add_subplot(gs[:,2:4])
     msort = np.argsort(morphs)
     ax = u.smooth_raster(centers,trial_mat[msort,:],vals=1-morphs[msort],ax=ax,smooth=smooth,cmap='cool')
-    ax.fill_betweenx([0,trial_mat.shape[0]+1],225,400,color='black',alpha=.3,zorder=0)
+    ax.fill_betweenx([0,trial_mat.shape[0]+1],rzone[0],rzone[1],color='black',alpha=.3,zorder=0)
     axarr.append(ax)
 
 
 
     # sort and color by position of reward
     ax = f.add_subplot(gs[:,4:])
-    ax.fill_betweenx([0,trial_mat.shape[0]+1],225,400,color='black',alpha=.3,zorder=0)
+    ax.fill_betweenx([0,trial_mat.shape[0]+1],rzone[0],rzone[1],color='black',alpha=.3,zorder=0)
     nor_mask = reward_pos>1
     trial_mat_tmp = np.copy(trial_mat)
     trial_mat_tmp[nor_mask,:]=np.nan

@@ -9,8 +9,8 @@ from . import PlaceCellAnalysis as pc
 import matplotlib.gridspec as gridspec
 import sklearn as sk
 import os
-os.sys.path.append("C:\\Users\\markp\\repos\\nmftools")
-from nmftools import ensemble, plots
+# os.sys.path.append("C:\\Users\\markp\\repos\\nmftools")
+# from nmftools import ensemble, plots
 # import ensemble
 # import plots
 

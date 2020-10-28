@@ -375,8 +375,8 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
             towerJitter[i] = tj
             bj, c = sp.stats.mode(sub_frame['bckgndJitter'],nan_policy='omit')
             bckgndJitter[i] = bj
-            co, c = sp.stats.mode(sub_frame['clickOn'],nan_policy='omit')
-            clickOn[i]=co
+            # co, c = sp.stats.mode(sub_frame['clickOn'],nan_policy='omit')
+            # clickOn[i]=co
 
 
             ### discrimination task stuff
@@ -410,7 +410,7 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
             ###
 
     trial_info = {'morphs':morphs,'max_pos':max_pos,'rewards':rewards,'zone0_licks':zone0_licks,'zone1_licks':zone1_licks,'zone0_speed':zone0_speed,
-                 'zone1_speed':zone1_speed,'pcnt':pcnt,'wallJitter':wallJitter,'towerJitter':towerJitter,'bckgndJitter':bckgndJitter,'clickOn':clickOn,
+                 'zone1_speed':zone1_speed,'pcnt':pcnt,'wallJitter':wallJitter,'towerJitter':towerJitter,'bckgndJitter':bckgndJitter,
                  'pos_lick':pos_lick,'omissions':omissions,'reward_pos':reward_pos,'rzone_entry':rzone_entry}
     return trial_info, tstart_inds, teleport_inds
 

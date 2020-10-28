@@ -344,7 +344,7 @@ def spatial_info_perm_test(SI,C,position,tstart,tstop,nperms = 10000,shuffled_SI
 
     return p, shuffled_SI
 
-def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True):
+def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True,cmap='pink'):
     '''plot place place cells across morph values using a cross-validated population sorting
     inputs: C_morph_dict - output from u.trial_type_dict(C_trial_mat, morphs) where C is the [trials, positions,ncells]
                 and morphs is [ntrials,] array of mean morph values
@@ -355,9 +355,10 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True):
             ax - axis array
             PC_dict - dictionary of cross-val sorted population activity rate maps'''
 
+    cmap = plt.get_cmap(cmap)
     morphs = [k for k in C_morph_dict.keys() if isinstance(k,np.float64)]
     if plot:
-        f,ax = plt.subplots(len(morphs),len(morphs),figsize=[5*len(morphs),7*len(morphs)])
+        f,ax = plt.subplots(np.maximum(len(morphs),2),np.maximum(len(morphs),2),figsize=[5*len(morphs),7*len(morphs)])
         f.subplots_adjust(wspace=.01,hspace=.05)
 
     getSort = lambda fr : np.argsort(np.argmax(np.squeeze(np.nanmean(fr,axis=0)),axis=0))
@@ -414,7 +415,7 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True):
                 PC_dict[m][mm]=fr.T
 
                 if plot:
-                    ax[i,j].imshow(fr.T,aspect='auto',cmap='pink',vmin=.2,vmax=.9)
+                    ax[i,j].imshow(fr.T,aspect='auto',cmap=cmap,vmin=.2,vmax=.9)
                     if j>0:
                         ax[i,j].set_yticks([])
                     ax[i,j].set_xticks([])
