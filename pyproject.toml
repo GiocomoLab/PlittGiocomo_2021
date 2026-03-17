@@ -1,0 +1,20 @@
+[project]
+name = "plittgiocomo-ca1morph-2019"
+version = "0.1.0"
+description = "Analysis of CA1 morphology data"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "matplotlib",
+    "pandas",
+    "astropy",
+    "ipython",
+    "jupyter",
+]
+
+[tool.uv]
+environment = ".venv"

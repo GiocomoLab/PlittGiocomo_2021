@@ -50,7 +50,7 @@ def plot_top_cells(S_tm,masks,SI,morph,maxcells=400):
         # do some smoothing in position axis for visualization
         c = u.nansmooth(np.squeeze(S_tm[:,:,si_order[cell]]),[0,3])
         # normalize by mean
-        c/=np.nanmean(c.ravel())
+        # c/=np.nanmean(c.ravel()) +1E-3
         # add plots
         row_i = int(ystride*math.floor(cell/nperrow))
         col_i = int(xstride*(cell%nperrow))
@@ -378,8 +378,9 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True,cmap='pink'):
 
             arr = np.copy(arr)
             arr[np.isnan(arr)]=0.
-            norms[m] = np.amax(np.nanmean(arr,axis=0),axis=0) # normalization from training data
-
+            # norms[m] = np.amax(np.nanmean(arr,axis=0),axis=0) # normalization from training data
+            norms[m] = np.percentile(np.nanmean(arr, axis=0),95, axis=0)  # normalization from training data
+            # norms[m]=np.nanmean(np.nanmean(arr,axis=0),axis=0)
             # # do the same for 1 morph
             # ntrials1 = C_morph_dict[1].shape[0]
             # ht1 = int(ntrials1/2)
@@ -415,7 +416,7 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True,cmap='pink'):
                 PC_dict[m][mm]=fr.T
 
                 if plot:
-                    ax[i,j].imshow(fr.T,aspect='auto',cmap=cmap,vmin=.2,vmax=.9)
+                    ax[i,j].imshow(fr.T,aspect='auto',cmap=cmap,vmin=0.3,vmax=.9) #,vmin=.2,vmax=.9)
                     if j>0:
                         ax[i,j].set_yticks([])
                     ax[i,j].set_xticks([])

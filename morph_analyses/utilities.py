@@ -368,13 +368,15 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
                 else:
                     rzone_entry[i]=reward_pos[i]
 
-
-            wj, c = sp.stats.mode(sub_frame['wallJitter'],nan_policy='omit')
-            wallJitter[i] = wj
-            tj, c = sp.stats.mode(sub_frame['towerJitter'],nan_policy='omit')
-            towerJitter[i] = tj
-            bj, c = sp.stats.mode(sub_frame['bckgndJitter'],nan_policy='omit')
-            bckgndJitter[i] = bj
+            try:
+                wj, c = sp.stats.mode(sub_frame['wallJitter'],nan_policy='omit')
+                wallJitter[i] = wj
+                tj, c = sp.stats.mode(sub_frame['towerJitter'],nan_policy='omit')
+                towerJitter[i] = tj
+                bj, c = sp.stats.mode(sub_frame['bckgndJitter'],nan_policy='omit')
+                bckgndJitter[i] = bj
+            except:
+                print("jitless")
             # co, c = sp.stats.mode(sub_frame['clickOn'],nan_policy='omit')
             # clickOn[i]=co
 
@@ -393,16 +395,16 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
             if pos_licks.shape[0]>0:
                 pos_lick[i] = pos_licks.iloc[0]
 
-            if m+wj+bj<.5:
-                if rewards[i]>0 and max_pos[i]>rzone1[1]:
-                    pcnt[i] = 0
-                elif max_pos[i]<rzone1[1]:
-                    pcnt[i]=1
-            else:
-                if rewards[i]>0 and max_pos[i]>rzone1[1]:
-                    pcnt[i] = 1
-                elif max_pos[i]<rzone1[1]:
-                    pcnt[i]=0
+            # if m+wj+bj<.5:
+            #     if rewards[i]>0 and max_pos[i]>rzone1[1]:
+            #         pcnt[i] = 0
+            #     elif max_pos[i]<rzone1[1]:
+            #         pcnt[i]=1
+            # else:
+            #     if rewards[i]>0 and max_pos[i]>rzone1[1]:
+            #         pcnt[i] = 1
+            #     elif max_pos[i]<rzone1[1]:
+            #         pcnt[i]=0
 
 
             if max_pos[i]>rzone1[1] and rewards[i]==0:
