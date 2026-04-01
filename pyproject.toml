@@ -1,3 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/morph_analyses"]
+
 [project]
 name = "plittgiocomo-ca1morph-2019"
 version = "0.1.0"
@@ -5,6 +12,7 @@ description = "Analysis of CA1 morphology data"
 authors = [
     {name = "Your Name", email = "your.email@example.com"},
 ]
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
@@ -14,7 +22,14 @@ dependencies = [
     "astropy",
     "ipython",
     "jupyter",
+    "pynwb",
+    "h5py",
 ]
 
-[tool.uv]
-environment = ".venv"
+[project.optional-dependencies]
+scratch = [
+    "umap-learn",
+    "suite2p",
+    "imageio",
+    "opencv-python",
+]
