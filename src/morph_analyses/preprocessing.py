@@ -110,7 +110,8 @@ def load_session_db(dir = "G:\\My Drive\\",scandir="TwoTower"):
             df: pandas array 'dataframe' which contains metadata for all sessions '''
 
     # find sqlite file that contains metadata
-    vr_fname = os.path.join(dir,"VR_Data","TwoTower","behavior.sqlite")
+    vr_fname = os.path.join(dir,"behavior.sqlite")
+
 
     # open a connections to pandas dataframe
     conn = sql.connect(vr_fname)

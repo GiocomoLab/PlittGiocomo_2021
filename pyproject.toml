@@ -12,19 +12,23 @@ description = "Analysis of CA1 morphology data"
 authors = [
     {name = "Your Name", email = "your.email@example.com"},
 ]
-requires-python = ">=3.10"
+requires-python = "==3.11.14"
 dependencies = [
     "numpy",
     "scipy",
     "scikit-learn",
     "matplotlib",
-    "pandas",
+    "pandas==3.0.2",
     "astropy",
     "ipython",
     "jupyter",
     "pynwb",
     "h5py",
+    "two_photon_utils",
 ]
+
+[tool.uv.sources]
+two-photon-utils = { git = "https://github.com/GiocomoLab/TwoPUtils.git", rev = "48672c9f61adb737869cba9ff72f255ebdd77c69" }
 
 [project.optional-dependencies]
 scratch = [
