@@ -275,7 +275,7 @@ def make_pos_bin_trial_matrices(arr, pos, tstart_inds, tstop_inds,bin_size=10,
     else:
         return np.squeeze(trial_mat), np.squeeze(occ_mat/occ_mat.sum(axis=1)[:,np.newaxis]), bin_edges, bin_centers
 
-
+ 
 
 def trial_type_dict(mat,type_vec):
     '''make dictionary where each key is a trial type and data is arbitrary trial x var x var data
@@ -349,8 +349,8 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
         sub_frame = data[s:f] # get rows for trial
 
         # get the morph value for that trial. omit if it's undefined
-        m, counts = sp.stats.mode(sub_frame['morph'],nan_policy='omit')
-        if len(m)>0:
+        m = sub_frame['morph'].mode().values[0]
+        if m is not None:
             morphs[i] = m
             max_pos[i] = np.nanmax(sub_frame['pos'])
             rewards[i] = np.nansum(sub_frame['reward'])
@@ -369,11 +369,11 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
                     rzone_entry[i]=reward_pos[i]
 
             try:
-                wj, c = sp.stats.mode(sub_frame['wallJitter'],nan_policy='omit')
+                wj = sub_frame['wallJitter'].mode().values[0]
                 wallJitter[i] = wj
-                tj, c = sp.stats.mode(sub_frame['towerJitter'],nan_policy='omit')
+                tj = sub_frame['towerJitter'].mode().values[0]
                 towerJitter[i] = tj
-                bj, c = sp.stats.mode(sub_frame['bckgndJitter'],nan_policy='omit')
+                bj = sub_frame['bckgndJitter'].mode().values[0]
                 bckgndJitter[i] = bj
             except:
                 print("jitless")
@@ -475,7 +475,7 @@ def smooth_raster(x,mat,ax=None,smooth=False,sig=2,vals=None,cmap='cool',tports=
 
     for ind,i in enumerate(np.arange(mat.shape[0]-1,0,-1)):
         if vals is not None:
-            ax.fill_between(x,mat[ind,:]+i,y2=i,color=cm(np.float(vals[ind])),linewidth=.001)
+            ax.fill_between(x,mat[ind,:]+i,y2=i,color=cm(float(vals[ind])),linewidth=.001)
         else:
             ax.fill_between(x,mat[ind,:]+i,y2=i,color = 'black',linewidth=.001)
 
