@@ -68,12 +68,12 @@ class SessNWBConverter:
         self.sess_path = SESSPATH / mouse / session.get('date_str') / f"{session.get('scene')}_{session.get('session')}.pkl" 
         self.sess = m.sess.CA1MorphSession.load(self.sess_path)
         
-        self.sbx_mat_path = SBXMATPATH / mouse / session.get('date_str') / \
-            f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.mat"
-        # self.sbx_path = SBXMATPATH / mouse / session.get('date_str') / \
-        #     f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.sbx"
-        self.sbx_mat_path.parent.mkdir(exist_ok=True, parents=True)
-        self.sbx_mat = None
+        # self.sbx_mat_path = SBXMATPATH / mouse / session.get('date_str') / \
+        #     f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.mat"
+        # # self.sbx_path = SBXMATPATH / mouse / session.get('date_str') / \
+        # #     f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.sbx"
+        # self.sbx_mat_path.parent.mkdir(exist_ok=True, parents=True)
+        # self.sbx_mat = None
         
         self.nwb_file = None
         self.behav_module = None
@@ -82,38 +82,11 @@ class SessNWBConverter:
         self.training_session = training_session
         
 
-        self.out_path = OUTPATH / mouse / f"ymaze_day{day}_scan{scan}_ophys_behav.nwb"
+        self.out_path = OUTPATH / mouse / f"morph_task_day{day}_scan{scan}_ophys_behav.nwb"
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.skip_segmentation = skip_segmentation
         
-    def _get_ttl_times(self):
-        if self.sbx_mat is None:
-            self._load_sbx_mat()
-            
-        
-
-        fr = self.sbx_mat['frame_rate'] # frame rate
-        lr = fr * self.sbx_mat['config']['lines']/self.sbx_mat['fov_repeats']  # line rate
-
-        frames = self.sbx_mat['frame'].astype(int)
-        frame_diff = np.ediff1d(frames, to_begin=0)
-        try:
-            mods = np.argwhere(frame_diff < -100)[0]
-            for i, mod in enumerate(mods.tolist()):
-                frames[mod:] += (i + 1) * 65535
-        except:
-            pass
-        
-        frames = frames * self.sbx_mat['fov_repeats']
-        if self.sbx_mat['fold_lines']>0:
-            lines = np.array([l % self.sbx_mat['fold_lines'] for l in self.sbx_mat['line']])
-        else:
-            lines = np.array(self.sbx_mat['line'])
-
-        ttl_times = frames / fr + lines / lr
-        return ttl_times
-
     def init_nwb_file(self):
         if self.training_session:
             session_id = f"training_day{self.day}"
@@ -132,7 +105,7 @@ class SessNWBConverter:
             session_id=session_id,
             experiment_description =  description,
             related_publications='https://doi-org/10.1038/s41593-021-00816-6',
-            keywords=["two photon", "hipppocampus", "CA1", "syntaxin3"]
+            keywords=["two photon", "hipppocampus", "CA1", "remapping"]
         )
 
         self.nwb_file.subject = Subject(
@@ -354,7 +327,7 @@ class SessNWBConverter:
         fl = Fluorescence(roi_response_series=roi_resp_series, name='neuropil')
         self.ophys_module.add(fl)
         
-        dff = self.sess.timeseries.get('F_dff')
+        dff = self.sess.timeseries.get('dff')
         roi_resp_series = RoiResponseSeries(
             name = 'dF',
             data = dff.T,
@@ -365,7 +338,30 @@ class SessNWBConverter:
         )
         fl = DfOverF(roi_response_series=roi_resp_series, name='dF')
         self.ophys_module.add(fl)
-
+        
+        spks = self.sess.timeseries.get('spks')
+        roi_resp_series = RoiResponseSeries(
+            name = 'deconvolved activity',
+            data = spks.T,
+            rois = self.roi_table,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['fs'],
+            description = 'deconvolved activity from channel 0 (gcamp)',
+        )
+        fl = Fluorescence(roi_response_series=roi_resp_series, name='deconvolved activity')
+        self.ophys_module.add(fl)
+        
+        spks_norm = self.sess.timeseries.get('spks_norm')
+        roi_resp_series = RoiResponseSeries(
+            name = 'normalized deconvolved activity',
+            data = spks_norm.T,
+            rois = self.roi_table,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['fs'],
+            description = 'normalized deconvolved activity from channel 0 (gcamp). Normalization is done by dividing each cell by the 99th percentile of its deconvolved activity across the session.',
+        )
+        fl = Fluorescence(roi_response_series=roi_resp_series, name='normalized deconvolved activity')
+        self.ophys_module.add(fl)
 
         
         
@@ -382,8 +378,8 @@ class SessNWBConverter:
         with NWBHDF5IO(self.out_path, "w") as fio:
             fio.write(self.nwb_file)
             
-    def remove_sbx_data(self):
-        self.sbx_mat_path.unlink(missing_ok=True)
+    # def remove_sbx_data(self):
+    #     self.sbx_mat_path.unlink(missing_ok=True)
         # self.sbx_path.unlink(missing_ok=True)
 
     def _to_json_serializable(self, obj):
@@ -412,21 +408,15 @@ class SessNWBConverter:
         print(self.metadata['alias'])
         meta = {
             'mouse': self._to_json_serializable(self.metadata['alias']),
-            'mux': False,
-            'novel_arm': self._to_json_serializable(self.sess.novel_arm),
             'day': self._to_json_serializable(self.day),
-            'novel_arm': self._to_json_serializable(self.sess.novel_arm),
             'trial_info': self._to_json_serializable(getattr(self.sess, 'trial_info', None)),
             'trial_start_inds': self._to_json_serializable(self.sess.trial_start_inds.to_numpy()),
             'teleport_inds': self._to_json_serializable(self.sess.teleport_inds.to_numpy()),
-            'place_cell_info': self._to_json_serializable(getattr(self.sess, 'place_cell_info', None)),
-            'vr_trial_info': self._to_json_serializable(getattr(self.vr_sess, 'trial_info', None)),
-            # 'vr_trial_start_inds': self._to_json_serializable(self.vr_sess.trial_start_inds.tolist()),
-            # 'vr_teleport_inds': self._to_json_serializable(self.vr_sess.teleport_inds.tolist()),   
+            'place_cell_info': self._to_json_serializable(getattr(self.sess, 'place_cell_info', None)),  
         }
 
         meta_json = json.dumps(meta)
-        ann = AnnotationSeries(name='trial_cell_data', data=[meta_json], timestamps=[0.0])
+        ann = AnnotationSeries(name='trial_data', data=[meta_json], timestamps=[0.0])
         self.nwb_file.add_acquisition(ann)
     
 

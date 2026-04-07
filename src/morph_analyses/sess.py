@@ -4,7 +4,15 @@ import numpy as np
 import two_photon_utils as tpu
 import morph_analyses.PlaceCellAnalysis as pc
 import morph_analyses.utilities as u
-# from two_photon_utils.sess import Session
+
+try:
+    from pynwb import NWBFile, NWBHDF5IO, TimeSeries
+    from pynwb.misc import AnnotationSeries
+except Exception:
+    NWBFile = None
+    NWBHDF5IO = None
+    AnnotationSeries = None
+    TimeSeries = None
 
 _TRIAL_COLS = ('morph', 'towerJitter', 'wallJitter', 'bckgndJitter')
 
@@ -139,5 +147,45 @@ class CA1MorphSession(tpu.sess.Session):
         )
         self.add_pos_binned_trial_matrix('speed')
         self.add_pos_binned_trial_matrix('licks')
+        
+    @classmethod
+    def from_nwb(cls, nwb_path, **kwargs):
+        """Create a CA1MorphSession from an NWB file.
+
+        Parameters
+        ----------
+        nwb_path : str or pathlib.Path
+            Path to NWB file containing CA1 morphology session data.
+
+        Returns
+        -------
+        CA1MorphSession
+        """
+        
+        raise NotImplementedError("Loading from NWB not yet implemented.")
+    
+        inst = cls(**kwargs) # construct a minimal YMazeSession class instance
+
+        with NWBHDF5IO(filepath, 'r') as io:
+        
+            nwb = io.read()
+
+            # load metadata annotation
+        
+            ann = nwb.acquisition.get('trial_cell_data')
+            
+            meta_json = ann.data[0]
+            meta = json.loads(meta_json)
+            for k, v in meta.items():
+                setattr(inst, k, v)
+                
+            if inst.mux:
+                inst._load_nwb_data_sparse(nwb)
+            else:
+                inst._load_nwb_data_dense(nwb)
+
+            
+        return inst
+    
         
 

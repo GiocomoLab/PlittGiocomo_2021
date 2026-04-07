@@ -23,6 +23,7 @@ dependencies = [
     "ipython",
     "jupyter",
     "pynwb",
+    "dandi",
     "h5py",
     "two_photon_utils",
 ]

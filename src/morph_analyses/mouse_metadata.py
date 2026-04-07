@@ -111,9 +111,9 @@ rare_sessions = {
             {'date_str': '16_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
             {'date_str': '18_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 17},
             {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6},
-            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24},
         ),
         'test_sessions': (
+            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24}, #error 
             {'date_str': '22_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
         ),
     },
