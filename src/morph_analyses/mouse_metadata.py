@@ -37,7 +37,7 @@ rare_sessions = {
         'notes': '',
         'training_sessions': (
             {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 1, 'notes': 'blocked 0 and 1 morph trials'},
-            {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 4},
+            {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 4},
             {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
             {'date_str': '12_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 4},
             {'date_str': '15_02_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 5},
@@ -107,14 +107,14 @@ rare_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f-WPRE',
         'notes': '',
         'training_sessions': (
-            {'date_str': '14_03_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 1},
-            {'date_str': '16_03_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
-            {'date_str': '18_03_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 17},
-            {'date_str': '20_03_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6},
-            {'date_str': '21_03_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24},
+            {'date_str': '14_03_2020', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 1},
+            {'date_str': '16_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
+            {'date_str': '18_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 17},
+            {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6},
+            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24},
         ),
         'test_sessions': (
-            {'date_str': '22_03_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
+            {'date_str': '22_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
         ),
     },
 
@@ -129,7 +129,7 @@ rare_sessions = {
         'training_sessions': ({'date_str': '07_02_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},),
         'test_sessions': (
             {'date_str': '09_02_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7},
-            {'date_str': '10_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 14},
+            {'date_str': '10_02_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 14},
             {'date_str': '11_02_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6},
         ),
     },
@@ -262,7 +262,7 @@ frequent_sessions = {
         ),
         'test_sessions': (
             {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 4},
-            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
+            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2}, # get suite2p data from suite2p_data folder
             {'date_str': '22_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6}, # get suite2p data from suite2p_data folder
         ),
     },
