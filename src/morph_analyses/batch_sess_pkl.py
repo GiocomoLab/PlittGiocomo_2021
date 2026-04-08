@@ -1,13 +1,21 @@
 import os
-import numpy as np
+import traceback
+import logging
 import pathlib
 import pickletools
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import morph_analyses as m
 
 
 twop_basedir = pathlib.Path('/mnt/BigDisk/2P_scratch/TwoTower')
 vr_basedir = pathlib.Path('/mnt/BigDisk/morph_vr_data/')
 out_basedir = pathlib.Path('/home/mplitt/morph_sess_pkls/')
+
+logging.basicConfig(
+    filename='/home/mplitt/morph_sess_pkls/batch_errors.log',
+    level=logging.ERROR,
+    format='%(asctime)s %(message)s',
+)
 
 def make_f_dict(mouse, date, sess, scan):
     f = {
@@ -42,26 +50,43 @@ def run_session(mouse, sess_deets):
 
     
     
-def run_rare_sessions():
-    
-    for mouse, metadata in m.mouse_metadata.rare_sessions.items():
-        print(f"Processing {mouse}...")
-        for sess_deets in metadata['test_sessions']+metadata['training_sessions']:
-            print(sess_deets)
-            outfile = out_basedir / mouse / sess_deets['date_str'] / f"TwoTower_foraging_{sess_deets['session']}.pkl"
-            if os.path.exists(outfile):
-                sess = m.sess.CA1MorphSession.load(outfile)
-                if len(list(sess.place_cell_info.keys())) > 0:
-                    print(f"File {outfile} already exists, skipping...")
-                    continue
-                
-                
+def _process_one(mouse, sess_deets):
+    outfile = out_basedir / mouse / sess_deets['date_str'] / f"TwoTower_foraging_{sess_deets['session']}.pkl"
+    if os.path.exists(outfile):
+        sess = m.sess.CA1MorphSession.load(outfile)
+        if len(list(sess.place_cell_info.keys())) > 0:
+            print(f"File {outfile} already exists, skipping...")
+            return
+    try:
+        sess = run_session(mouse, sess_deets)
+        sess.save(outfile)
+    except Exception as e:
+        msg = f"FAILED | mouse={mouse} | session={sess_deets['session']} | date={sess_deets['date_str']} | {e}\n{traceback.format_exc()}"
+        print(msg)
+        logging.error(msg)
+
+
+def run_sessions(sess_dict, n_workers=8):
+    tasks = [
+        (mouse, sess_deets)
+        for mouse, metadata in sess_dict.items()
+        for sess_deets in metadata['test_sessions'] + metadata['training_sessions']
+    ]
+
+    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+        futures = {executor.submit(_process_one, mouse, sess_deets): (mouse, sess_deets)
+                   for mouse, sess_deets in tasks}
+        for future in as_completed(futures):
+            mouse, sess_deets = futures[future]
             try:
-                sess = run_session(mouse, sess_deets)
-                sess.save(outfile)
+                future.result()
             except Exception as e:
-                print(f"Error processing {mouse} session {sess_deets['session']}: {e}")
-                continue
+                msg = f"FAILED | mouse={mouse} | session={sess_deets['session']} | date={sess_deets['date_str']} | {e}\n{traceback.format_exc()}"
+                print(msg)
+                logging.error(msg)
+
+
         
 if __name__ == "__main__":
-    run_rare_sessions()
+    # run_sessions(m.mouse_metadata.rare_sessions)
+    run_sessions(m.mouse_metadata.frequent_sessions)

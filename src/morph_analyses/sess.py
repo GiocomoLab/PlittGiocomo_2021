@@ -4,6 +4,7 @@ import numpy as np
 import two_photon_utils as tpu
 import morph_analyses.PlaceCellAnalysis as pc
 import morph_analyses.utilities as u
+import json
 
 try:
     from pynwb import NWBFile, NWBHDF5IO, TimeSeries
@@ -162,11 +163,10 @@ class CA1MorphSession(tpu.sess.Session):
         CA1MorphSession
         """
         
-        raise NotImplementedError("Loading from NWB not yet implemented.")
-    
+        
         inst = cls(**kwargs) # construct a minimal YMazeSession class instance
 
-        with NWBHDF5IO(filepath, 'r') as io:
+        with NWBHDF5IO(nwb_path, 'r') as io:
         
             nwb = io.read()
 
