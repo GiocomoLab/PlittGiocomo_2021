@@ -1,2 +1,2 @@
 from . import preprocessing, utilities, behavior, SimilarityMatrixAnalysis, SimulatedSimMats, SingleCellSimNMF, UnityTransforms, MAPInference, PlaceCellAnalysis, SingleSessionPlots, sess
-from . import mouse_metadata
+from . import mouse_metadata, create_nwb

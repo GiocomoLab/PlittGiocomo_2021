@@ -39,15 +39,14 @@ import morph_analyses as m
 
 
 OUTPATH = pathlib.Path("/mnt/BigDisk/NWB_files")
-SESSPATH = pathlib.Path("/home/mplitt/YMazeSessPkls")
-VRSESSPATH = pathlib.Path("/home/mplitt/YMaze_VR_Pkls")
+SESSPATH = pathlib.Path("/home/mplitt/morph_sess_pkls")
 SBXMATPATH = pathlib.Path("/mnt/BigDisk/2P_scratch")
 
 
 class SessNWBConverter:
     
-    def __init__(self, mouse, metadata, session, day, training_session=False, scan=0, sub_notes='',
-                 skip_segmentation=False):
+    def __init__(self, mouse, metadata, session, training_session=False, scan=0, sub_notes='',
+                 ):
 
         self.mouse = mouse
         if mouse in m.mouse_metadata.rare_sessions.keys():
@@ -61,7 +60,7 @@ class SessNWBConverter:
         
         self.session = session
         self.metadata = metadata
-        self.day = day
+        self.day = session.get('day')
         self.scan = scan
         self.sub_notes = sub_notes
 
@@ -82,10 +81,9 @@ class SessNWBConverter:
         self.training_session = training_session
         
 
-        self.out_path = OUTPATH / mouse / f"morph_task_day{day}_scan{scan}_ophys_behav.nwb"
+        self.out_path = OUTPATH / mouse / f"morph_task_day{session['day']}_scan{scan}_ophys_behav.nwb"
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.skip_segmentation = skip_segmentation
         
     def init_nwb_file(self):
         if self.training_session:
@@ -367,7 +365,6 @@ class SessNWBConverter:
         
     def build_file(self):
         self.init_nwb_file()
-        self.add_vr_data_full_res()
         self.add_vr_data_aligned()
         self.init_2p_data()
         self.add_cell_timeseries()

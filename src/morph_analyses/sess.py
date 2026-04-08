@@ -187,5 +187,68 @@ class CA1MorphSession(tpu.sess.Session):
             
         return inst
     
+    def _load_nwb_data_dense(self, nwb):
+
+        self.trial_start_inds = np.array(self.trial_start_inds)
+        self.teleport_inds = np.array(self.teleport_inds)
+
+        for k, v in self.trial_info.items():
+            self.trial_info[k]=np.array(v)
+
+        for lr, pc_dict in self.place_cell_info.items():
+            for k, v in pc_dict.items():
+                self.place_cell_info[lr][k] = np.array(v)
+
+            
+
+        # load VR timeseries
+        behav_module = nwb.processing['behavior']['2P-aligned behavior']
+        vr_data = {k:pd.Series(v.data[:]) for k,v in behav_module.time_series.items()}
+        
+        vr_data['time'] = pd.Series(behav_module['position'].timestamps[:])
+        
+        self.vr_data = pd.DataFrame(vr_data)
+
+        # load 2P data
+        ophys_module = nwb.processing['ophys']
+
+        timeseries = {
+            'F': ophys_module['fluorescence']['fluorescence'].data[:].T,
+            'Fneu': ophys_module['neuropil']['neuropil fluorescence'].data[:].T,
+            'F_dff': ophys_module['dF']['dF'].data[:].T,
+            'position': vr_data['position'].to_numpy()[np.newaxis,:],
+            'licks': vr_data['licks'].to_numpy()[np.newaxis,:],
+            'reward': vr_data['reward'].to_numpy()[np.newaxis,:],
+            'time': vr_data['time'].to_numpy()[np.newaxis,:],
+            'speed': vr_data['speed'].to_numpy()[np.newaxis,:],
+            }
+
+        self.add_timeseries(**timeseries)
+        self.add_pos_binned_trial_matrix(list(timeseries.keys()))
+
+        meanImg = ophys_module['Backgrounds']['meanImg_ch0'].data[:]
+        self.s2p_ops = {
+            'meanImg': meanImg,
+            'Ly': meanImg.shape[0],
+            'Lx': meanImg.shape[1],
+            'meanImg_chan2': ophys_module['Backgrounds']['meanImg_ch1'].data[:],
+            'Fs': ophys_module['fluorescence']['fluorescence'].rate,
+            }
+        self.frame_rate = ophys_module['fluorescence']['fluorescence'].rate
+        
+        self.s2p_stats = []
+        pixel_mask_table = ophys_module['ImageSegmentation']['PlaneSegmentation'].to_dataframe()
+        for ind, row in pixel_mask_table.iterrows():
+            roi_dict = {'ypix': [], 'xpix': [], 'lam': []}
+            for px in row['pixel_mask']:
+                roi_dict['ypix'].append(px[0])
+                roi_dict['xpix'].append(px[1])
+                roi_dict['lam'].append(px[2])
+            for k,v in roi_dict.items():
+                roi_dict[k] = np.array(v)
+            self.s2p_stats.append(roi_dict)
+        self.s2p_stats = np.array(self.s2p_stats)
+
+    
         
 
