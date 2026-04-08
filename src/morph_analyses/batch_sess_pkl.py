@@ -17,13 +17,13 @@ logging.basicConfig(
     format='%(asctime)s %(message)s',
 )
 
-def make_f_dict(mouse, date, sess, scan):
+def make_f_dict(mouse, date, sess, scan, scene):
     f = {
         'mouse': mouse,
-        'scan_file': twop_basedir / mouse / date / 'TwoTower_foraging' / f"TwoTower_foraging_{sess:03d}_{scan:03d}.sbx",
-        'scanheader_file': twop_basedir / mouse / date / 'TwoTower_foraging' / f"TwoTower_foraging_{sess:03d}_{scan:03d}.mat",
-        'vr_filename': vr_basedir / mouse / date / f"TwoTower_foraging_{sess}.sqlite",
-        's2p_path': twop_basedir / mouse / date / 'TwoTower_foraging' / f"TwoTower_foraging_{sess:03d}_{scan:03d}" / "suite2p",
+        'scan_file': twop_basedir / mouse / date / scene / f"{scene}_{sess:03d}_{scan:03d}.sbx",
+        'scanheader_file': twop_basedir / mouse / date / scene / f"{scene}_{sess:03d}_{scan:03d}.mat",
+        'vr_filename': vr_basedir / mouse / date / f"{scene}_{sess}.sqlite",
+        's2p_path': twop_basedir / mouse / date / scene / f"{scene}_{sess:03d}_{scan:03d}" / "suite2p",
         'prompt_for_keys': False,
         'VR_only': False,
         'scanner': 'NLW',
@@ -36,7 +36,7 @@ def make_f_dict(mouse, date, sess, scan):
 
 
 def run_session(mouse, sess_deets):
-    f = make_f_dict(mouse, sess_deets['date_str'], sess_deets['session'], sess_deets['scan'])
+    f = make_f_dict(mouse, sess_deets['date_str'], sess_deets['session'], sess_deets['scan'], sess_deets['scene'])
 
     sess = m.sess.CA1MorphSession(**f)
     sess.load_scan_info()
@@ -51,7 +51,7 @@ def run_session(mouse, sess_deets):
     
     
 def _process_one(mouse, sess_deets):
-    outfile = out_basedir / mouse / sess_deets['date_str'] / f"TwoTower_foraging_{sess_deets['session']}.pkl"
+    outfile = out_basedir / mouse / sess_deets['date_str'] / f"{sess_deets['scene']}_{sess_deets['session']}.pkl"
     if os.path.exists(outfile):
         sess = m.sess.CA1MorphSession.load(outfile)
         if len(list(sess.place_cell_info.keys())) > 0:
@@ -89,4 +89,5 @@ def run_sessions(sess_dict, n_workers=8):
         
 if __name__ == "__main__":
     # run_sessions(m.mouse_metadata.rare_sessions)
-    run_sessions(m.mouse_metadata.frequent_sessions)
+    # run_sessions(m.mouse_metadata.frequent_sessions)
+    run_sessions(m.mouse_metadata.frequent_w_decision_sessions)

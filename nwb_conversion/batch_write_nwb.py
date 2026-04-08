@@ -16,7 +16,7 @@ def write_session(mouse, metadata, session, training_session=False):
     print(f"Wrote {nwb_maker.out_path}")
 
 
-def run_all():
+def run_rare():
     for mouse, metadata in m.mouse_metadata.rare_sessions.items():
         for session in metadata['test_sessions']:
             try:
@@ -32,6 +32,37 @@ def run_all():
                 print(f"ERROR: {mouse} day {session['day']} (training)")
                 traceback.print_exc()
 
+def run_frequent():
+    for mouse, metadata in m.mouse_metadata.frequent_sessions.items():
+        for session in metadata['test_sessions']:
+            try:
+                write_session(mouse, metadata, session, training_session=False)
+            except Exception:
+                print(f"ERROR: {mouse} day {session['day']} (test)")
+                traceback.print_exc()
+
+        for session in metadata['training_sessions']:
+            try:
+                write_session(mouse, metadata, session, training_session=True)
+            except Exception:
+                print(f"ERROR: {mouse} day {session['day']} (training)")
+                traceback.print_exc()
+
+def run_frequent_wd():
+    for mouse, metadata in m.mouse_metadata.frequent_w_decision_sessions.items():
+        for session in metadata['test_sessions']:
+            try:
+                write_session(mouse, metadata, session, training_session=False)
+            except Exception:
+                print(f"ERROR: {mouse} day {session['day']} (test)")
+                traceback.print_exc()
+
+        for session in metadata['training_sessions']:
+            try:
+                write_session(mouse, metadata, session, training_session=True)
+            except Exception:
+                print(f"ERROR: {mouse} day {session['day']} (training)")
+                traceback.print_exc()
 
 if __name__ == "__main__":
-    run_all()
+    run_frequent_wd()

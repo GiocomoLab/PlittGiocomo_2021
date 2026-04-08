@@ -146,15 +146,15 @@ frequent_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 6},
-            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 5},
-            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 11},
-            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 15},
+            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 6, 'day': 1},
+            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 5, 'day': 3},
+            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 11, 'day': 5},
+            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 15, 'day': 7},
         ),
         'test_sessions': (
-            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3},
-            {'date_str': '16_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6},
-            {'date_str': '17_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 17},
+            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3, 'day': 8},
+            {'date_str': '16_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6, 'day': 9},
+            {'date_str': '17_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 17, 'day': 10},
         ),
     },
 
@@ -167,16 +167,16 @@ frequent_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 11},
-            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 12},
-            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3},
-            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7},
+            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 11, 'day': 1},
+            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 12, 'day': 3},
+            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3, 'day': 5},
+            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7, 'day': 7},
         ),
         'test_sessions': (
-            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7},
-            {'date_str': '16_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 9},
-            {'date_str': '17_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
-            {'date_str': '18_04_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 3},
+            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7, 'day': 8},
+            {'date_str': '16_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 9, 'day': 9},
+            {'date_str': '17_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 10},
+            {'date_str': '18_04_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 3, 'day': 11},
         ),
     },
 
@@ -189,17 +189,17 @@ frequent_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 16},
-            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 15},
-            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7},
-            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 11},
+            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 16, 'day': 1},
+            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 15, 'day': 3},
+            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7, 'day': 5},
+            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 11, 'day': 7},
         ),
         'test_sessions': (
-            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6},
+            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6, 'day': 8},
         ),
     },
 
-    '4222174.1':{ # download data from google drive then push to oak
+    '4222174.1':{
         'alias': 'F4',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2018, 10, 29),
@@ -208,17 +208,17 @@ frequent_sessions = {
         'functional_indicator': 'GCaMP6f expressed from Ai94 transgenic allele',
         'notes': '',
         'training_sessions': (
-            {'date_str': '04_06_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 16},
-            {'date_str': '06_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 8},
-            {'date_str': '08_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 13},
-            {'date_str': '11_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 9},
+            {'date_str': '04_06_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 16, 'day': 1},
+            {'date_str': '06_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 8, 'day': 3},
+            {'date_str': '08_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 13, 'day': 5},
+            {'date_str': '11_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 9, 'day': 7},
         ),
         'test_sessions': (
-            {'date_str': '13_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 8},
-            {'date_str': '14_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 5},
-            {'date_str': '15_06_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 8},
-            {'date_str': '17_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7},
-            {'date_str': '18_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 21},
+            {'date_str': '13_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 8, 'day': 8},
+            {'date_str': '14_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 5, 'day': 9},
+            {'date_str': '15_06_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 8, 'day': 10},
+            {'date_str': '17_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7, 'day': 11},
+            {'date_str': '18_06_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 21, 'day': 12},
         ),
     },
 
@@ -231,18 +231,18 @@ frequent_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 5},
-            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 4},
-            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3},
-            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
+            {'date_str': '08_04_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 5, 'day': 1},
+            {'date_str': '10_04_2019', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 4, 'day': 3},
+            {'date_str': '12_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3, 'day': 5},
+            {'date_str': '14_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 7},
 
         ),
         'test_sessions': (
-            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3},
-            {'date_str': '16_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
-            {'date_str': '17_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 14},
-            {'date_str': '18_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
-            {'date_str': '19_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3},
+            {'date_str': '15_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3, 'day': 8},
+            {'date_str': '16_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 9},
+            {'date_str': '17_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 14, 'day': 10},
+            {'date_str': '18_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 11},
+            {'date_str': '19_04_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3, 'day': 12},
         ),
     },
     
@@ -255,15 +255,15 @@ frequent_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '13_03_2020', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 4},
-            {'date_str': '15_03_2020', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 7},
-            {'date_str': '17_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 1},
-            {'date_str': '19_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
+            {'date_str': '13_03_2020', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 4, 'day': 1},
+            {'date_str': '15_03_2020', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 7, 'day': 3},
+            {'date_str': '17_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 1, 'day': 5},
+            {'date_str': '19_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 7},
         ),
         'test_sessions': (
-            {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 4},
-            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2}, # get suite2p data from suite2p_data folder
-            {'date_str': '22_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6}, # get suite2p data from suite2p_data folder
+            {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 4, 'day': 8},
+            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 9}, # get suite2p data from suite2p_data folder
+            {'date_str': '22_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6, 'day': 10}, # get suite2p data from suite2p_data folder
         ),
     },
 
@@ -279,10 +279,20 @@ frequent_w_decision_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {},
+            {'date_str': '04_06_2019', 'scene': 'FreqMorph_Decision', 'session': 0, 'scan': 6, 'day': 1},
+            {'date_str': '06_06_2019', 'scene': 'FreqMorph_Decision', 'session': 1, 'scan': 8, 'day': 3},
+            {'date_str': '08_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 2, 'scan': 22, 'day': 5},
+            {'date_str': '11_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 1, 'scan': 17, 'day': 7},
         ),
         'test_sessions': (
-            {},
+            {'date_str': '13_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 1, 'scan': 7, 'day': 9},
+            {'date_str': '14_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 2, 'scan': 13, 'day': 10},
+            {'date_str': '15_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 1, 'scan': 3, 'day': 11},
+            {'date_str': '17_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 1, 'scan': 6, 'day': 12},
+            {'date_str': '18_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 1, 'scan': 26, 'day': 13},
+            {'date_str': '19_06_2019', 'scene': 'FreqMorph_Timeout', 'session': 1, 'scan': 5, 'day': 14},
+            {'date_str': '23_06_2019', 'scene': 'TwoTower_Timeout', 'session': 1, 'scan': 17, 'day': 17},
+            {'date_str': '25_06_2019', 'scene': 'TwoTower_Timeout', 'session': 1, 'scan': 9, 'day': 19},
         ),
     },
     
@@ -294,11 +304,19 @@ frequent_w_decision_sessions = {
         'imaging_lambda': 920,
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
-        'training_sessions': (
-            {},
+        'training_sessions': ( 
+            {'date_str': '06_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 3, 'scan': 6, 'day': 1},
+            {'date_str': '08_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 2, 'day': 3},
+            {'date_str': '10_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 6, 'day': 5},
+            {'date_str': '12_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 3, 'day': 7},
         ),
         'test_sessions': (
-            {},
+            {'date_str': '13_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 3, 'day': 8},
+            {'date_str': '14_08_2019', 'scene': 'TwoTower_Timeout', 'session': 2, 'scan': 5, 'day': 9},
+            {'date_str': '25_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 3, 'day': 15},
+            {'date_str': '26_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 3, 'day': 16},
+            {'date_str': '03_09_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 20, 'day': 22},
+            {'date_str': '04_09_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 9, 'day': 23},
         ),
     },
 
@@ -310,11 +328,13 @@ frequent_w_decision_sessions = {
         'imaging_lambda': 920,
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
-        'training_sessions': (
-            {},
+        'training_sessions': ( 
+            {'date_str': '06_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 9, 'day': 1},
+            {'date_str': '08_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 5, 'day': 3},
+            {'date_str': '10_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 10, 'day': 5},
+            {'date_str': '12_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 6, 'day': 7},
         ),
         'test_sessions': (
-            {},
         ),
     },
 
@@ -326,11 +346,20 @@ frequent_w_decision_sessions = {
         'imaging_lambda': 920,
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f',
         'notes': '',
-        'training_sessions': (
-            {},
+        'training_sessions': ( 
+            {'date_str': '06_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 11, 'day': 1},
+            {'date_str': '08_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 2, 'day': 3},
+            {'date_str': '10_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 13, 'day': 5},
+            {'date_str': '12_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 10, 'day': 7},
         ),
         'test_sessions': (
-            {},
+            {'date_str': '13_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 2, 'scan': 2, 'day': 8},
+            {'date_str': '14_08_2019', 'scene': 'TwoTower_Timeout', 'session': 2, 'scan': 13, 'day': 9},
+            {'date_str': '25_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 7, 'day': 15},
+            {'date_str': '26_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 7, 'day': 16},
+            {'date_str': '27_08_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 6, 'day': 17},
+            {'date_str': '03_09_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 24, 'day': 22},
+            {'date_str': '04_09_2019', 'scene': 'TwoTower_noTimeout', 'session': 1, 'scan': 12, 'day': 23},
         ),
     },
 
