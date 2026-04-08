@@ -2,7 +2,7 @@ import pathlib
 import pickle
 import numpy as np
 import two_photon_utils as tpu
-import morph_analyses.PlaceCellAnalysis as pc
+import morph_analyses.place_cell_analysis as pc
 import morph_analyses.utilities as u
 import json
 
