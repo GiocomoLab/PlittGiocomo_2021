@@ -26,10 +26,12 @@ dependencies = [
     "dandi",
     "h5py",
     "two_photon_utils",
+    "nwbinspector",
 ]
 
 [tool.uv.sources]
 two-photon-utils = { git = "https://github.com/GiocomoLab/TwoPUtils.git", rev = "48672c9f61adb737869cba9ff72f255ebdd77c69" }
+nmftools = { git = "https://github.com/ahwillia/nmftools"}
 
 [project.optional-dependencies]
 scratch = [

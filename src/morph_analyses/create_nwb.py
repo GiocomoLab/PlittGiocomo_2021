@@ -38,7 +38,7 @@ import morph_analyses as m
 # VR_DIR = pathlib.Path("/mnt/BigDisk/VRData")
 
 
-OUTPATH = pathlib.Path("/mnt/BigDisk/NWB_files")
+OUTPATH = pathlib.Path("/home/mplitt/NWB_files")
 SESSPATH = pathlib.Path("/home/mplitt/morph_sess_pkls")
 SBXMATPATH = pathlib.Path("/mnt/BigDisk/2P_scratch")
 
@@ -106,13 +106,15 @@ class SessNWBConverter:
             keywords=["two photon", "hipppocampus", "CA1", "remapping"]
         )
 
+        session_date = datetime.datetime.strptime(self.session['date_str'], '%d_%m_%Y')
+        age_days = (session_date - self.metadata.get('date_of_birth')).days
         self.nwb_file.subject = Subject(
             subject_id = self.metadata.get('alias'),
-            age = self.session.get('datetime') - self.metadata.get('date_of_birth'),
+            age = f"P{age_days}D",
             description = self.sub_description,
             species = 'Mus musculus',
             sex = self.metadata.get('sex'),
-            genotype = self.session.get('genotype'),
+            genotype = self.metadata.get('genotype'),
         )
         
         self.behavior_module = self.nwb_file.create_processing_module('behavior', 'VR behavioral timeseries')
@@ -126,36 +128,34 @@ class SessNWBConverter:
         
         vr_timeseries = self.sess.timeseries
         vr_data = self.sess.vr_data
-        time_stamps = vr_data['time'].to_numpy()
+        time_stamps = vr_data['time'].to_numpy(dtype=float)
         rate = self.sess.s2p_ops['fs']
         
         
         # vr_data info
         
-        # trial num 
+        # trial num
         ts_cntnr.create_timeseries(
             name = 'trial number',
-            data = vr_data['trialnum'].to_numpy(),
+            data = vr_data['trialnum'].to_numpy(dtype=float),
             unit = 'arbitrary',
             description = 'current trial number',
             timestamps = time_stamps,
-            # rate=rate,
-            # starting_time=time_stamps[0],
         )
-        
+
         # pos -  position
         ts_cntnr.create_timeseries(
             name = 'position',
-            data = vr_data['pos'].to_numpy(),
+            data = vr_data['pos'].to_numpy(dtype=float),
             unit = '1 cm',
             timestamps = time_stamps,
             description = "Position along track. Negative values indicate inter-trial interval tunnel. 0=start of maze",
         )
-        
+
         # trial start
         ts_cntnr.create_timeseries(
             name = 'trial start',
-            data = vr_data['tstart'].to_numpy(),
+            data = vr_data['tstart'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Boolean. Trial start time",
@@ -164,36 +164,36 @@ class SessNWBConverter:
         # teleport
         ts_cntnr.create_timeseries(
             name = 'teleport',
-            data = vr_data['teleport'].to_numpy(),
+            data = vr_data['teleport'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Boolean. Trial end/teleport time",
         )
-        
-        # vr_timeseries 
+
+        # vr_timeseries
         # speed
         ts_cntnr.create_timeseries(
             name = 'speed',
-            data = vr_timeseries['speed'].ravel(),
+            data = vr_timeseries['speed'].ravel().astype(float),
             unit = 'cm/s',
             timestamps = time_stamps,
             description = "Speed along Y maze",
         )
-        
-        
+
+
         # lick rate
         ts_cntnr.create_timeseries(
             name = 'licks',
-            data = vr_data['lick'].to_numpy(),
+            data = vr_data['lick'].to_numpy(dtype=float),
             unit = 'avg number of licks',
             timestamps = time_stamps,
             description = "Average downsampled lick rate. Do not use for quantitative lick comparisons between groups",
         )
-        
+
         # reward
         ts_cntnr.create_timeseries(
             name = 'reward',
-            data = vr_timeseries['reward'].ravel(),
+            data = vr_data['reward'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Reward delivery times.",
@@ -202,7 +202,7 @@ class SessNWBConverter:
         # morph value
         ts_cntnr.create_timeseries(
             name = 'morph value',
-            data = vr_data['morphs'].to_numpy(),
+            data = vr_data['morph'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Morph value for each trial",
@@ -211,7 +211,7 @@ class SessNWBConverter:
         # wall jitter
         ts_cntnr.create_timeseries(
             name = 'wall jitter',
-            data = vr_data['wallJitter'].to_numpy(),
+            data = vr_data['wallJitter'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Wall morph jitter value for each trial",
@@ -220,7 +220,7 @@ class SessNWBConverter:
         # tower jitter
         ts_cntnr.create_timeseries(
             name = 'tower jitter',
-            data = vr_data['towerJitter'].to_numpy(),
+            data = vr_data['towerJitter'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Tower morph jitter value for each trial",
@@ -229,7 +229,7 @@ class SessNWBConverter:
         # background jitter
         ts_cntnr.create_timeseries(
             name = 'background jitter',
-            data = vr_data['bckgndJitter'].to_numpy(),
+            data = vr_data['bckgndJitter'].to_numpy(dtype=float),
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Background morph jitter value for each trial",
@@ -258,7 +258,7 @@ class SessNWBConverter:
             imaging_rate=self.sess.s2p_ops["fs"],
             description="CA1 pyramidal cell layer",
             device=device,
-            excitation_lambda=self.metadata.get('imaging_lambda'),
+            excitation_lambda=float(self.metadata.get('imaging_lambda')),
             location="CA1",
             grid_spacing=([1000/512., 1000/796.]),
             grid_spacing_unit="microns",
