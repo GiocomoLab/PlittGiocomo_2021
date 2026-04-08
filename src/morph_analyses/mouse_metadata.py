@@ -3,8 +3,8 @@ import datetime
 
 rare_sessions = {
 
-    '4139265.3':{
-        'alias': 'R1',
+    'R1':{
+        'alias': '4139265.3',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2018, 11, 7),
         'genotype': 'CaMKII-Cre',
@@ -27,8 +27,8 @@ rare_sessions = {
         ),
     },
 
-    '4139265.4':{
-        'alias': 'R2',
+    'R2':{
+        'alias': '4139265.4',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2018, 11, 7),
         'genotype': 'CaMKII-Cre',
@@ -52,8 +52,8 @@ rare_sessions = {
         ),
     },
 
-    '4139265.5':{
-        'alias': 'R3',
+    'R3':{
+        'alias': '4139265.5',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2018, 11, 7),
         'genotype': 'CaMKII-Cre',
@@ -76,8 +76,8 @@ rare_sessions = {
         ),
     },
 
-    '4222168.1':{
-        'alias': 'R4',
+    'R4':{
+        'alias': '4222168.1',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2019, 3, 3),
         'genotype': 'CaMKII-Cre',
@@ -98,8 +98,8 @@ rare_sessions = {
         ),
     },
 
-    '4343703.1':{
-        'alias': 'R5',
+    'R5':{
+        'alias': '4222168.1',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 10, 29),
         'genotype': 'CaMKII-Cre',
@@ -118,8 +118,8 @@ rare_sessions = {
         ),
     },
 
-    '4343706': {
-        'alias': 'R6',
+    'R6': {
+        'alias': '4343706',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 9, 23),
         'genotype': 'wildtype C57BL/6J',
@@ -137,8 +137,8 @@ rare_sessions = {
 }
 
 frequent_sessions = {
-    '4222153.1':{
-        'alias': 'F1',
+    'F1':{
+        'alias': '4222153.1',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 1, 17),
         'genotype': 'CaMKII-Cre',
@@ -158,8 +158,8 @@ frequent_sessions = {
         ),
     },
 
-    '4222153.2':{
-        'alias': 'F2',
+    'F2':{
+        'alias': '4222153.2',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 1, 17),
         'genotype': 'CaMKII-Cre',
@@ -180,8 +180,8 @@ frequent_sessions = {
         ),
     },
 
-    '4222153.3':{
-        'alias': 'F3',
+    'F3':{
+        'alias': '4222153.3',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 1, 17),
         'genotype': 'CaMKII-Cre',
@@ -199,8 +199,8 @@ frequent_sessions = {
         ),
     },
 
-    '4222174.1':{
-        'alias': 'F4',
+    'F4':{
+        'alias': '4222174.1',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2018, 10, 29),
         'genotype': 'Ai94; CaMKII-Cre',
@@ -222,8 +222,8 @@ frequent_sessions = {
         ),
     },
 
-    '4222154.1': {
-        'alias': 'F5',
+    'F5': {
+        'alias': '4222154.1',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2019, 1, 7),
         'genotype': 'CaMKII-Cre',
@@ -246,8 +246,8 @@ frequent_sessions = {
         ),
     },
     
-    '4343702.1': { # download from google drive then push to oak
-        'alias': 'F6',
+    'F6': { 
+        'alias': '4343702.1',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2019, 10, 29),
         'genotype': 'CaMKII-Cre',
@@ -270,8 +270,8 @@ frequent_sessions = {
 }
 
 frequent_w_decision_sessions = {
-    '4222157.4':{
-        'alias': 'FD1',
+    'FD1':{
+        'alias': '4222157.4',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 2, 8),
         'genotype': 'CaMKII-Cre',
@@ -296,8 +296,8 @@ frequent_w_decision_sessions = {
         ),
     },
     
-    '4222169.1': {
-        'alias': 'FD2',
+    'FD2': {
+        'alias': '4222169.1',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2019, 2, 8),
         'genotype': 'CaMKII-Cre',
@@ -320,8 +320,8 @@ frequent_w_decision_sessions = {
         ),
     },
 
-    '4222169.2': {
-        'alias': 'FD3',
+    'FD3': {
+        'alias': '4222169.2',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2019, 2, 8),
         'genotype': 'CaMKII-Cre',
@@ -338,8 +338,8 @@ frequent_w_decision_sessions = {
         ),
     },
 
-    '4222169.4': {
-        'alias': 'FD4',
+    'FD4': {
+        'alias': '4222169.4',
         'sex': 'F',
         'date_of_birth': datetime.datetime(2019, 2, 8),
         'genotype': 'CaMKII-Cre',

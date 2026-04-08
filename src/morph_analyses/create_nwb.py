@@ -45,8 +45,7 @@ SBXMATPATH = pathlib.Path("/mnt/BigDisk/2P_scratch")
 
 class SessNWBConverter:
     
-    def __init__(self, mouse, metadata, session, training_session=False, scan=0, sub_notes='',
-                 ):
+    def __init__(self, mouse, metadata, session, training_session=False, scan=0, sub_notes=''):
 
         self.mouse = mouse
         if mouse in m.mouse_metadata.rare_sessions.keys():
