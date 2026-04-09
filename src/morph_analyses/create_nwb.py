@@ -63,7 +63,7 @@ class SessNWBConverter:
         self.scan = scan
         self.sub_notes = sub_notes
 
-        self.sess_path = SESSPATH / mouse / session.get('date_str') / f"{session.get('scene')}_{session.get('session')}.pkl" 
+        self.sess_path = SESSPATH / metadata['alias'] / session.get('date_str') / f"{session.get('scene')}_{session.get('session')}.pkl" 
         self.sess = m.sess.CA1MorphSession.load(self.sess_path)
         
         # self.sbx_mat_path = SBXMATPATH / mouse / session.get('date_str') / \
@@ -80,7 +80,7 @@ class SessNWBConverter:
         self.training_session = training_session
         
 
-        self.out_path = OUTPATH / mouse / f"morph_task_day{session['day']}_scan{scan}_ophys_behav.nwb"
+        self.out_path = OUTPATH / metadata['alias'] / f"morph_task_day{session['day']}_scan{scan}_ophys_behav.nwb"
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
 
         
@@ -108,7 +108,7 @@ class SessNWBConverter:
         session_date = datetime.datetime.strptime(self.session['date_str'], '%d_%m_%Y')
         age_days = (session_date - self.metadata.get('date_of_birth')).days
         self.nwb_file.subject = Subject(
-            subject_id = self.metadata.get('alias'),
+            subject_id = self.mouse,
             age = f"P{age_days}D",
             description = self.sub_description,
             species = 'Mus musculus',
@@ -403,7 +403,7 @@ class SessNWBConverter:
     def add_trial_data(self):
         print(self.metadata['alias'])
         meta = {
-            'mouse': self._to_json_serializable(self.metadata['alias']),
+            'mouse': self._to_json_serializable(self.mouse),
             'day': self._to_json_serializable(self.day),
             'trial_info': self._to_json_serializable(getattr(self.sess, 'trial_info', None)),
             'trial_start_inds': self._to_json_serializable(self.sess.trial_start_inds.to_numpy()),

@@ -289,6 +289,7 @@ def trial_type_dict(mat,type_vec):
     ndim = len(d['all'].shape)
     d['labels'] = type_vec
     d['indices']={}
+    
     for i,m in enumerate(np.unique(type_vec)):
         d['indices'][m] = np.where(type_vec==m)[0]
 

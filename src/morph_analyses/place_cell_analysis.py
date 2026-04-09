@@ -59,27 +59,29 @@ def plot_top_cells(S_tm,masks,SI,morph,maxcells=400):
 
         # plot in morph order
         tick_inds = np.arange(0,c.shape[0],10)
-        morphsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i])
+        morphsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i+1])
         morphsort_ax.imshow(c[morph_order,:],cmap='magma',aspect='auto')
         tick_labels = ["%.2f" % morph_s[i] for i in tick_inds]
 
         # plot in trial order
-        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i+1])
+        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i])
         trialsort_ax.imshow(c,cmap='magma',aspect='auto')
 
 
-
+        morphsort_ax.yaxis.tick_right()
         morphsort_ax.set_yticks(tick_inds)
         morphsort_ax.set_yticklabels(tick_labels,fontsize=5)
         trialsort_ax.set_yticks([])
         morphsort_ax.set_xticks([])
         trialsort_ax.set_xticks([])
-        morphsort_ax.set_title("%d" % si_order[cell])
+        trialsort_ax.set_title("cell %d \n trial sort" % si_order[cell], fontsize=9)
+        morphsort_ax.set_title("morph sort", fontsize=9)
 
-        if row_i==0 and col_i==0:
-            trialsort_ax.set_ylabel('Trial #')
-            trialsort_ax.yaxis.set_label_position('right')
-            morphsort_ax.set_ylabel('Mean Morph')
+        # if col_i==0:
+        trialsort_ax.set_ylabel('Trial #')
+        
+        morphsort_ax.set_ylabel('Morph value')
+        morphsort_ax.yaxis.set_label_position('right')
 
     return f
 
@@ -243,60 +245,7 @@ def place_cells_calc(C, position, trial_info, tstart_inds,
             p[cell] = (SI[m][cell] <= SI_perms[m][:,cell]).sum()/nperms
         masks[m] = p<=pthr
         pvals[m] = p
-        # p = (SI[m]>=np.array(SI_perms[m]).ravel()).sum()/nperms
-
-    # # split into morph specific arrays
-    # C_morph_dict = u.trial_type_dict(C_trial_mat,morphs)
-    # occ_morph_dict = u.trial_type_dict(occ_trial_mat,morphs)
-    # # tstart_inds, teleport_inds = np.where(tstart_inds==1)[0], np.where(teleport_inds==1)[0]
-    # tstart_morph_dict = u.trial_type_dict(tstart_inds,morphs)
-    # teleport_morph_dict = u.trial_type_dict(teleport_inds,morphs)
-    #
-    # # for each morph value
-    # FR,masks,SI = {}, {}, {}
-    # # shuffled_SI=None
-    # for m in morphlist:
-    #     print(m)
-    #     FR[m]= {}
-    #     SI[m] = {}
-    #
-    #     # firing rate maps
-    #     FR[m]['all'] = np.nanmean(C_morph_dict[m],axis=0)
-    #     occ_all = occ_morph_dict[m].sum(axis=0) # fractional occupancy
-    #     occ_all /= occ_all.sum()
-    #     SI[m]['all'] =  spatial_info(FR[m]['all'],occ_all) # spatial information
-    #     n_boots=30
-    #
-    #     tmat = C_morph_dict[m] # trial x position x cell activity rates
-    #     omat = occ_morph_dict[m] # single trial occupancy
-    #     if bootstrap:
-    #         SI_bs = np.zeros([n_boots,C.shape[1]]) # bootstrapped spatial information
-    #         print("start bootstrap")
-    #         for b in range(n_boots):
-    #
-    #             # pick a random subset of trials
-    #             ntrials = tmat.shape[0]
-    #             bs_pcnt = .67 # proportion of trials to keep
-    #             bs_thr = int(bs_pcnt*ntrials) # number of trials to keep
-    #
-    #             # calculate spatial information with randomly selected set of trials
-    #             bs_inds = np.random.permutation(ntrials)[:bs_thr]
-    #             FR_bs = np.nanmean(tmat[bs_inds,:,:],axis=0)
-    #             occ_bs = omat[bs_inds,:].sum(axis=0)
-    #             occ_bs/=occ_bs.sum()
-    #             SI_bs[b,:] = spatial_info(FR_bs,occ_bs)
-    #         print("end bootstrap")
-    #         SI[m]['bootstrap']= np.median(SI_bs,axis=0).ravel() # take the true SI as the median of the bootstrapped estimates
-    #         p_bs, shuffled_SI = spatial_info_perm_test(SI[m]['bootstrap'],C, # permutation test
-    #                                 position,tstart_morph_dict[m],teleport_morph_dict[m],
-    #                                 nperms=1000,win_trial=win_trial_perm)
-    #         masks[m] = p_bs>pthr # hypothesis test
-    #     else:
-    #         p, shuffled_SI = spatial_info_perm_test(SI[m]['all'],C, # permutation test
-    #                                 position,tstart_morph_dict[m],teleport_morph_dict[m],
-    #                                 nperms=10,win_trial=win_trial_perm)
-    #         masks[m] = p>pthr # hypothesis test
-
+        
 
     return masks, SI, pvals
 
@@ -358,8 +307,8 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True,cmap='pink'):
     cmap = plt.get_cmap(cmap)
     morphs = [k for k in C_morph_dict.keys() if isinstance(k,np.float64)]
     if plot:
-        f,ax = plt.subplots(np.maximum(len(morphs),2),np.maximum(len(morphs),2),figsize=[5*len(morphs),7*len(morphs)])
-        f.subplots_adjust(wspace=.01,hspace=.05)
+        f,ax = plt.subplots(np.maximum(len(morphs),2),np.maximum(len(morphs),2),figsize=[2*len(morphs),3*len(morphs)])
+        f.subplots_adjust(wspace=.05,hspace=.1)
 
     getSort = lambda fr : np.argsort(np.argmax(np.squeeze(np.nanmean(fr,axis=0)),axis=0))
     PC_dict = {m:{} for m in morphs}
@@ -380,27 +329,11 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True,cmap='pink'):
             arr[np.isnan(arr)]=0.
             # norms[m] = np.amax(np.nanmean(arr,axis=0),axis=0) # normalization from training data
             norms[m] = np.percentile(np.nanmean(arr, axis=0),95, axis=0)  # normalization from training data
-            # norms[m]=np.nanmean(np.nanmean(arr,axis=0),axis=0)
-            # # do the same for 1 morph
-            # ntrials1 = C_morph_dict[1].shape[0]
-            # ht1 = int(ntrials1/2)
-            # sort_trials_1 = np.random.permutation(ntrials1)
-            # arr1= C_morph_dict[1][:,:,masks[1]]
-            # arr1 = arr1[sort_trials_1[:ht1],:,:]
-            # sort1 = getSort(arr1)
-            #
-            # _arr1 = np.copy(arr1)
-            # _arr1[np.isnan(arr1)]=0.
-            # norm1= np.amax(np.nanmean(_arr1,axis=0),axis=0)
-
+            
 
     else: # otherwise, use all trials
         pass
-        # sort0 = getSort(C_morph_dict[0][:,:,masks[0]])
-        # norm0 = np.amax(np.nanmean(C_morph_dict[0][:,:,masks[0]],axis=0),axis=0)
-        # sort1 = getSort(C_morph_dict[1][:,:,masks[1]])
-        # norm1 = np.amax(np.nanmean(C_morph_dict[1][:,:,masks[1]],axis=0),axis=0)
-
+        
 
     for i,m in enumerate(morphs):
         if cv_sort: # get rate maps for other half of trials
@@ -422,35 +355,11 @@ def plot_placecells(C_morph_dict,masks,cv_sort=True, plot = True,cmap='pink'):
                     ax[i,j].set_xticks([])
                         # ax[1,i].set_xticks([])
 
-        #     if m ==0:
-        #         fr_n0 = np.squeeze(np.nanmean(C_morph_dict[m][sort_trials_0[ht0:],:,:],axis=0))
-        #         fr_n1 = np.squeeze(np.nanmean(C_morph_dict[m],axis=0))
-        #     elif m==1:
-        #         fr_n1 = np.squeeze(np.nanmean(C_morph_dict[m][sort_trials_1[ht1:],:,:],axis=0))
-        #         fr_n0 = np.squeeze(np.nanmean(C_morph_dict[m],axis=0))
-        #     else:
-        #         fr_n0 = np.squeeze(np.nanmean(C_morph_dict[m],axis=0))
-        #         fr_n1 = np.squeeze(np.nanmean(C_morph_dict[m],axis=0))
-        # else: # get rate maps
-        #     fr_n0 = np.squeeze(np.nanmean(C_morph_dict[m],axis=0))
-        #     fr_n1 = np.squeeze(np.nanmean(C_morph_dict[m],axis=0))
-        #
-        # # smooth and normalize by within cell max
-        # fr_n0, fr_n1 = fr_n0[:,masks[0]], fr_n1[:,masks[1]]
-        # fr_n0= gaussian_filter1d(fr_n0/norm0,2,axis=0)
-        # fr_n1 = gaussian_filter1d(fr_n1/norm1,2,axis=0)
-        #
-        # # save data
-        # fr_n0, fr_n1 = fr_n0[:,sort0], fr_n1[:,sort1]
-        # PC_dict[0][m], PC_dict[1][m]= fr_n0.T, fr_n1.T
-        # if plot:
-        #     ax[0,i].imshow(fr_n0.T,aspect='auto',cmap='pink',vmin=0.2,vmax=.9)
-        #     ax[1,i].imshow(fr_n1.T,aspect='auto',cmap='pink',vmin=0.2,vmax=.9)
-        #     if i>0:
-        #         ax[0,i].set_yticks([])
-        #         ax[1,i].set_yticks([])
-        #     ax[0,i].set_xticks([])
-        #     ax[1,i].set_xticks([])
+                    if j==0:
+                        ax[i,j].set_ylabel(f'Cells (sorted by morph {m})')
+                        ax[i,j].set_xlabel('Position')
+
+       
 
     if plot:
         return f, ax, PC_dict

@@ -100,8 +100,8 @@ def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rz
     outputs: f - figure handle
             axarr - array of axis handles
     '''
-    f = plt.figure(figsize=[15,15])
-    gs = gridspec.GridSpec(4,6)
+    f = plt.figure(figsize=[7,7])
+    gs = gridspec.GridSpec(4,8)
     axarr = []
 
     # sort by trial order, color by morph
@@ -110,20 +110,23 @@ def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rz
     # highlight possible reward zone
     ax.fill_betweenx([0,trial_mat.shape[0]+1],rzone[0],rzone[1],color='black',alpha=.3,zorder=0)
     ax.set_ylabel('Trial',size='xx-large')
+    ax.set_title("Actual trial order")
     axarr.append(ax)
 
 
+
     # sort trials by morph
-    ax = f.add_subplot(gs[:,2:4])
+    ax = f.add_subplot(gs[:,3:5])
     msort = np.argsort(morphs)
     ax = u.smooth_raster(centers,trial_mat[msort,:],vals=1-morphs[msort],ax=ax,smooth=smooth,cmap='cool')
     ax.fill_betweenx([0,trial_mat.shape[0]+1],rzone[0],rzone[1],color='black',alpha=.3,zorder=0)
+    ax.set_title("Sorted by morph value")
     axarr.append(ax)
 
 
 
     # sort and color by position of reward
-    ax = f.add_subplot(gs[:,4:])
+    ax = f.add_subplot(gs[:,6:])
     ax.fill_betweenx([0,trial_mat.shape[0]+1],rzone[0],rzone[1],color='black',alpha=.3,zorder=0)
     nor_mask = reward_pos>1
     trial_mat_tmp = np.copy(trial_mat)
@@ -133,6 +136,7 @@ def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rz
     trial_mat_tmp = np.copy(trial_mat)
     trial_mat_tmp[~nor_mask,:]=np.nan
     ax = u.smooth_raster(centers,trial_mat_tmp[rsort,:],vals=np.ones(reward_pos.shape),ax=ax,smooth=smooth,cmap='Greys')
+    ax.set_title("Sorted by reward location")
     axarr.append(ax)
 
     for i,a in enumerate(axarr):

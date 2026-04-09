@@ -39,7 +39,7 @@ class CA1MorphSession(tpu.sess.Session):
 
 
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True, 
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='position', min_pos=0, max_pos=450, bin_size=10, mat_only=True, 
                                     **trial_matrix_kwargs):
         """
 
@@ -66,7 +66,7 @@ class CA1MorphSession(tpu.sess.Session):
     def place_cells_calc(self,  **pc_kwargs):
 
         masks, SI, pvals = pc.place_cells_calc(self.timeseries['spks_norm'].T, 
-                                            self.vr_data['pos'],
+                                            self.vr_data['position'],
                                             self.trial_info,
                                             self.trial_start_inds, 
                                             self.teleport_inds,
@@ -151,21 +151,23 @@ class CA1MorphSession(tpu.sess.Session):
         with open(path, 'rb') as f:
             return pickle.load(f)
 
-    
     @classmethod
-    def from_nwb(cls, nwb_path, **kwargs):
+    def from_nwb(cls, mouse, traintest, day, **kwargs):
         """Create a CA1MorphSession from an NWB file.
 
         Parameters
         ----------
-        nwb_path : str or pathlib.Path
-            Path to NWB file containing CA1 morphology session data.
-
+        
         Returns
         -------
         CA1MorphSession
         """
-        
+        from . import params
+        assert traintest in set(('training','testing')), "traintest must be either 'training' or 'testing'"
+
+        day = str(day).replace('.','-')
+        nwb_path = params.dandi_dir / f'sub-{mouse}' / f'sub-{mouse}_ses-{traintest}-day{day}_behavior+ophys.nwb'
+
         
         inst = cls(**kwargs) # construct a minimal YMazeSession class instance
 
@@ -188,17 +190,20 @@ class CA1MorphSession(tpu.sess.Session):
         return inst
     
     def _load_nwb_data(self, nwb):
-
+        import copy 
         self.trial_start_inds = np.array(self.trial_start_inds)
         self.teleport_inds = np.array(self.teleport_inds)
 
         for k, v in self.trial_info.items():
             self.trial_info[k]=np.array(v)
 
-        for morph_val, pc_dict in self.place_cell_info.items():
-            for k, v in pc_dict.items():
-                self.place_cell_info[morph_val][k] = np.array(v)
-
+        self._place_cell_info = {}
+        for k, pc_dict in self.place_cell_info.items():
+            self._place_cell_info[k] = {}
+            for _k, v in pc_dict.items():
+                self.place_cell_info[k][_k] = np.array(v)
+                self._place_cell_info[k][float(_k)] = np.array(v)
+        self.place_cell_info = self._place_cell_info
             
 
         # load VR timeseries
@@ -224,7 +229,7 @@ class CA1MorphSession(tpu.sess.Session):
             }
 
         self.add_timeseries(**timeseries)
-        self.add_pos_binned_trial_matrix(list(timeseries.keys()))
+        self.add_pos_binned_trial_matrix(list(timeseries.keys()), pos_key='position')
 
         meanImg = ophys_module['Backgrounds']['meanImg'].data[:]
         self.s2p_ops = {

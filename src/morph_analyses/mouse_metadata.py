@@ -12,8 +12,8 @@ rare_sessions = {
         'functional_indicator': 'AAV-PHP.eB-EF1a-DIO-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 1, 'notes': 'blocked 0 and 1 morph trials', 'day':1},
-            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 4, 'day': 1},
+            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 1, 'notes': 'blocked 0 and 1 morph trials', 'day':1.1},
+            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 4, 'day': 1.2},
             {'date_str': '12_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 3},
             {'date_str': '15_02_2019', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 3, 'day': 5},
             {'date_str': '17_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 5, 'day': 7},
@@ -36,8 +36,8 @@ rare_sessions = {
         'functional_indicator': 'AAV-PHP.eB-EF1a-DIO-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 1, 'notes': 'blocked 0 and 1 morph trials', 'day': 1},
-            {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 4, 'day': 1},
+            {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 1, 'notes': 'blocked 0 and 1 morph trials', 'day': 1.1},
+            {'date_str': '07_02_2019', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 4, 'day': 1.2},
             {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 3},
             {'date_str': '12_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 4, 'day': 5},
             {'date_str': '15_02_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 5, 'day': 7},
@@ -61,8 +61,8 @@ rare_sessions = {
         'functional_indicator': 'AAV-PHP.eB-EF1a-DIO-GCaMP6f',
         'notes': '',
         'training_sessions': (
-            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 2, 'notes': 'blocked 0 and 1 morph trials', 'day':1},
-            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6, 'day': 1},
+            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 2, 'notes': 'blocked 0 and 1 morph trials', 'day':1.1},
+            {'date_str': '10_02_2019', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6, 'day': 1.2},
             {'date_str': '12_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 3},
             {'date_str': '15_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 5},
             {'date_str': '17_02_2019', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 7},
@@ -99,7 +99,7 @@ rare_sessions = {
     },
 
     'R5':{
-        'alias': '4222168.1',
+        'alias': '4343703.1',
         'sex': 'M',
         'date_of_birth': datetime.datetime(2019, 10, 29),
         'genotype': 'CaMKII-Cre',

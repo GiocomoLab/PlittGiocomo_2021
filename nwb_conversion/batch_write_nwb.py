@@ -65,4 +65,6 @@ def run_frequent_wd():
                 traceback.print_exc()
 
 if __name__ == "__main__":
+    run_rare()
+    run_frequent()
     run_frequent_wd()
