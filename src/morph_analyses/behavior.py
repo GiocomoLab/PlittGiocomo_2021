@@ -22,8 +22,8 @@ def behavior_raster_task(trial_mat, centers, morphs, reward_pos, smooth=True, TO
             axarr - array of axis handles
     '''
 
-    f = plt.figure(figsize=[15,15])
-    gs = gridspec.GridSpec(4,6)
+    f = plt.figure(figsize=[7,7])
+    gs = gridspec.GridSpec(4,8)
     axarr = []
 
     # sort by trial order, color by morph
@@ -33,6 +33,7 @@ def behavior_raster_task(trial_mat, centers, morphs, reward_pos, smooth=True, TO
     ax.fill_betweenx([0,trial_mat.shape[0]+1],250,315,color=plt.cm.cool(1.),alpha=.3,zorder=0)
     ax.fill_betweenx([0,trial_mat.shape[0]+1],350,415,color=plt.cm.cool(0.),alpha=.3,zorder=0)
     ax.set_ylabel('Trial',size='xx-large')
+    ax.set_title('Trial sort')
     axarr.append(ax)
     if TO: # if data contains timeouts
     # find position of teleports
@@ -52,7 +53,8 @@ def behavior_raster_task(trial_mat, centers, morphs, reward_pos, smooth=True, TO
         ax.scatter(to_pos,trial_mat.shape[0]-to_trial-.5,color='red',marker='o')
 
     # sort trials by morph
-    ax = f.add_subplot(gs[:,2:4])
+    ax = f.add_subplot(gs[:,3:5])
+    ax.set_title('Morph sort')
     msort = np.argsort(morphs)
     ax = u.smooth_raster(centers,trial_mat[msort,:],vals=1-morphs[msort],ax=ax,smooth=smooth,cmap='cool')
     ax.fill_betweenx([0,trial_mat.shape[0]+1],250,315,color=plt.cm.cool(1.),alpha=.3,zorder=0)
@@ -65,7 +67,8 @@ def behavior_raster_task(trial_mat, centers, morphs, reward_pos, smooth=True, TO
 
 
     # sort and color by position of reward
-    ax = f.add_subplot(gs[:,4:])
+    ax = f.add_subplot(gs[:,6:])
+    ax.set_title('Reward pos. sort')
     ax.fill_betweenx([0,trial_mat.shape[0]+1],250,315,color=plt.cm.cool(1.),alpha=.3,zorder=0)
     ax.fill_betweenx([0,trial_mat.shape[0]+1],350,415,color=plt.cm.cool(0.),alpha=.3,zorder=0)
     nor_mask = reward_pos>1

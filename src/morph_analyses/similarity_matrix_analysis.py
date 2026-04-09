@@ -27,7 +27,7 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
         vmin = np.percentile(C.ravel(),10)
 
 
-    f = plt.figure(figsize=[30,12])
+    f = plt.figure(figsize=[15,6])
     gs = gridspec.GridSpec(14,30)
 
     effMorph = trial_info['morphs'] + trial_info['wallJitter'] #+ trial_info['bckgndJitter'] + trial_info['towerJitter']
@@ -40,35 +40,39 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
 
 
     ##### sort by trial order
-    c_ax = f.add_subplot(gs[:10,:10])
+    c_ax = f.add_subplot(gs[:10,:9])
     c_ax.imshow(C,cmap='Greys',vmin=vmin,vmax=vmax,aspect='auto')
     c_ax.set_yticks([])
     c_ax.set_xticks([])
+    c_ax.set_title('Trial sort')
 
-    m_ax = f.add_subplot(gs[10:12,:10])
+    m_ax = f.add_subplot(gs[10:12,:9])
     m_ax.scatter(x,effMorph,c=1-effMorph,cmap='cool')
     m_ax.scatter(x[~rmask],effMorph[~rmask],c='black',s=10)
     m_ax.set_xlim([0,x.shape[0]])
     m_ax.set_yticks([])
     m_ax.set_xticks([])
+    m_ax.set_ylabel('Morph')
 
     # put black dots on unrewarded trials
-    t_ax = f.add_subplot(gs[12:,:10])
+    t_ax = f.add_subplot(gs[12:,:9])
     t_ax.scatter(x,tnumber,c=tnumber,cmap='viridis')
     t_ax.scatter(x[~rmask],tnumber[~rmask],c='black',s=10)
     t_ax.set_xlim([0,x.shape[0]])
     t_ax.set_yticks([])
+    t_ax.set_ylabel('Trial')
 
     # sort similarity matrix by morph
     C_msort = _sort_simmat(C,msort)
 
     ###### sort by morph value
-    cm_ax = f.add_subplot(gs[:10,10:20])
+    cm_ax = f.add_subplot(gs[:10,10:19])
     cm_ax.imshow(C_msort,cmap='Greys',vmin=vmin,vmax=vmax,aspect='auto')
     cm_ax.set_yticks([])
     cm_ax.set_xticks([])
+    cm_ax.set_title('Morph sort')
 
-    mm_ax = f.add_subplot(gs[10:12,10:20])
+    mm_ax = f.add_subplot(gs[10:12,10:19])
     mm_ax.scatter(x,effMorph[msort],c=1-effMorph[msort],cmap='cool')
     emr = np.copy(effMorph)
     emr[rmask]=np.nan
@@ -77,7 +81,7 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
     mm_ax.set_xlim([0,x.shape[0]])
     mm_ax.set_yticks([])
     mm_ax.set_xticks([])
-    tm_ax = f.add_subplot(gs[12:,10:20])
+    tm_ax = f.add_subplot(gs[12:,10:19])
     tm_ax.scatter(x,tnumber[msort],c=tnumber[msort],cmap='viridis')
     tm_ax.set_xlim([0,x.shape[0]])
     tm_ax.set_yticks([])
@@ -88,17 +92,18 @@ def plot_trial_simmat(C,trial_info,vmax=None,vmin=None):
     C_csort = _sort_simmat(C,clustsort)
 
     ##### sort by morph value of cluster
-    cc_ax = f.add_subplot(gs[:10,20:])
+    cc_ax = f.add_subplot(gs[:10,20:29])
     cc_ax.imshow(C_csort,cmap='Greys',vmin=vmin,vmax=vmax,aspect='auto')
     cc_ax.set_yticks([])
     cc_ax.set_xticks([])
-    mc_ax = f.add_subplot(gs[10:12,20:])
+    cc_ax.set_title('Clustering alg. sorted')
+    mc_ax = f.add_subplot(gs[10:12,20:29])
     mc_ax.scatter(x,effMorph[clustsort],c=1-effMorph[clustsort],cmap='cool')
     mc_ax.scatter(x,emr[clustsort],c='black',s=10)
     mc_ax.set_yticks([])
     mc_ax.set_xticks([])
     mc_ax.set_xlim([0,x.shape[0]])
-    tc_ax = f.add_subplot(gs[12:,20:])
+    tc_ax = f.add_subplot(gs[12:,20:29])
     tc_ax.scatter(x,tnumber[clustsort],c=tnumber[clustsort],cmap='viridis')
     tc_ax.set_xlim([0,x.shape[0]])
     tc_ax.set_yticks([])
