@@ -27,6 +27,8 @@ dependencies = [
     "h5py",
     "two_photon_utils",
     "nwbinspector",
+    "seaborn",
+    "umap-learn",
 ]
 
 [tool.uv.sources]

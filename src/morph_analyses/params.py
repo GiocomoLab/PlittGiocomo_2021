@@ -12,7 +12,7 @@ dandiset_id = "000054"  # DANDI dataset ID for this project
 dandi_download_dir = '/home/mplitt/'  # Base directory where DANDI data is/will be saved
 
 # Repository configuration
-repo_dir = '/home/mplitt/repos/PlittGiocomo_CA2Morph_2019'  # Root repository directory
+repo_dir = '/home/mplitt/repos/PlittGiocomo_CA1Morph_2019'  # Root repository directory
 
 # Create Path objects for key directories
 dandi_download_dir = pathlib.Path(dandi_download_dir)
