@@ -107,10 +107,10 @@ rare_sessions = {
         'functional_indicator': 'AAV1-CAG-FLEX-GCaMP6f-WPRE',
         'notes': '',
         'training_sessions': (
-            {'date_str': '14_03_2020', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 1, 'day': 1},
+            # {'date_str': '14_03_2020', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 1, 'day': 1},
             {'date_str': '16_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 3},
-            {'date_str': '18_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 17, 'day': 5},
-            {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6, 'day': 7},
+            # {'date_str': '18_03_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 17, 'day': 5},
+            # {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6, 'day': 7},
         ),
         'test_sessions': (
             {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24, 'day': 8}, 

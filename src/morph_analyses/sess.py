@@ -39,7 +39,7 @@ class CA1MorphSession(tpu.sess.Session):
 
 
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='position', min_pos=0, max_pos=450, bin_size=10, mat_only=True, 
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True, 
                                     **trial_matrix_kwargs):
         """
 
@@ -66,7 +66,7 @@ class CA1MorphSession(tpu.sess.Session):
     def place_cells_calc(self,  **pc_kwargs):
 
         masks, SI, pvals = pc.place_cells_calc(self.timeseries['spks_norm'].T, 
-                                            self.vr_data['position'],
+                                            self.vr_data['pos'],
                                             self.trial_info,
                                             self.trial_start_inds, 
                                             self.teleport_inds,

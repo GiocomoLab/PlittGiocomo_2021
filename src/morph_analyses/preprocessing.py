@@ -640,7 +640,7 @@ def _get_frame(f,fix_teleports=True):
                     break
 
         tstart_inds_vec = np.zeros([frame.shape[0],])
-        # print('fix teleports',frame.shape,tstart_inds.shape,teleport_inds.shape)
+        print('fix teleports',frame.shape,tstart_inds.shape,teleport_inds.shape)
         tstart_inds_vec[tstart_inds] = 1
 
         teleport_inds_vec = np.zeros([frame.shape[0],])
