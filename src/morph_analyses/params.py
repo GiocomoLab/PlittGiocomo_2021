@@ -19,6 +19,7 @@ dandi_download_dir = pathlib.Path(dandi_download_dir)
 dandi_dir = pathlib.Path(dandi_download_dir) / dandiset_id  # Full path to DANDI dataset
 
 repo_dir = pathlib.Path(repo_dir)
+data_dir = repo_dir / 'data' 
 fig_output_dir = repo_dir / 'data' / 'figures' # Default directory for saving figures
 frame_grabber_dir = repo_dir / 'data' / 'frame_grabber'
 

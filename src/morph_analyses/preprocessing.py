@@ -589,13 +589,13 @@ def _VR_interp(frame):
 
     ca_df[cumsum_list] = np.diff(ca_cumsum,axis=0)
 
-    ca_df.fillna(method='ffill',inplace=True)
+    ca_df.ffill(inplace=True)
     k = Gaussian1DKernel(5)
     cum_dz = convolve(np.cumsum(ca_df['dz']._values),k,boundary='extend')
     ca_df['dz'] = np.ediff1d(cum_dz,to_end=0)
 
 
-    ca_df['speed'].interpolate(method='linear',inplace=True)
+    # ca_df['speed'].interpolate(method='linear',inplace=True)
     ca_df['speed']=np.array(np.divide(ca_df['dz'],np.ediff1d(ca_df['time'],to_begin=1./fr)))
     ca_df['speed'].iloc[0]=0
 
@@ -628,7 +628,7 @@ def _get_frame(f,fix_teleports=True):
         pos[pos<-50] = -50
         teleport_inds = np.where(np.ediff1d(pos,to_end=0)<=-50)[0]
         tstart_inds = np.append([0],teleport_inds[:-1]+1)
-        print(tstart_inds)
+        # print(tstart_inds)
 
         for ind in range(tstart_inds.shape[0]):  # for teleports
             while (pos[tstart_inds[ind]]<0) : # while position is negative
