@@ -113,7 +113,7 @@ rare_sessions = {
             # {'date_str': '20_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 6, 'day': 7},
         ),
         'test_sessions': (
-            {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24, 'day': 8}, 
+            # {'date_str': '21_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 24, 'day': 8}, 
             {'date_str': '22_03_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day': 9},
         ),
     },
@@ -126,8 +126,10 @@ rare_sessions = {
         'imaging_lambda': 920,
         'functional_indicator': 'AAV1-syn-GCaMP7f',
         'notes': 'missing training sessions',
-        'training_sessions': (), #({'date_str': '07_02_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2,},),
+        'training_sessions': (), 
         'test_sessions': (
+            # {'date_str': '07_02_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day':8},
+            # {'date_str': '08_02_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2, 'day':9},
             {'date_str': '09_02_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 7, 'day': 8},
             {'date_str': '10_02_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 14, 'day': 9},
             {'date_str': '11_02_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6, 'day': 10},
