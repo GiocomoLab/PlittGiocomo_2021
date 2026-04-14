@@ -91,7 +91,7 @@ def behavior_raster_task(trial_mat, centers, morphs, reward_pos, smooth=True, TO
 
 
 
-def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rzone=(250,415)):
+def behavior_raster_foraging(trial_mat,centers,morphs,reward_pos,smooth=True, rzone=(225,395)):
     '''plot trial by position behavioral data as a "smooth raster" for foraging task.
     separate plots are generated sorting trials by actual order, morph value, and reward position
     inputs: trial_mat - [trials, positions] behavioral data to be plotted, can include nans for
