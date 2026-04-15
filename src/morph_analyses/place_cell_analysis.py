@@ -9,6 +9,80 @@ from . import preprocessing as pp
 import matplotlib.gridspec as gridspec
 
 
+def plot_top_cells_w_simmat(S_tm,masks,SI,morph,maxcells=400):
+    '''
+    plot single cell trial x position rate maps for the cells with highest spatial information
+    inputs: S_tm - trials x positions x neurons tensor of activity
+            masks - dictionary of masks to find place cells (output of place_cells_calc)
+            SI - spatial information of each cell (output of place_cells_calc)
+            morph - vector of morph values for each trial
+            maxcells - maximum number of cells to try to plot
+    outputs: f - figure object for saving
+    '''
+
+    # find cells that are place cells in any of the morphs
+    allmask = masks[0]
+    for k,v in masks.items():
+        allmask = allmask | v
+
+    # number of cells to plot
+    nplacecells = np.minimum(allmask.sum(),maxcells)
+
+    # set up axes
+    xstride = 3
+    ystride = 4
+    nperrow = 8
+    f = plt.figure(figsize=[nperrow*xstride,nplacecells/nperrow*ystride])
+    gs = gridspec.GridSpec(math.ceil(nplacecells/nperrow)*ystride,xstride*nperrow)
+
+    # sum spatial information across morphs and use as order for cells to be plotted
+    SI_total = [SI[m] for m in SI.keys()]
+    SIt = SI_total[0]
+    for ind in SI_total[1:]:
+        SIt+=ind
+    si_order = np.argsort(SIt)[::-1]
+
+    morph_order = np.argsort(morph)
+    morph_s = morph[morph_order]
+
+    for cell in range(nplacecells): # for each cell
+        # do some smoothing in position axis for visualization
+        c = u.nansmooth(np.squeeze(S_tm[:,:,si_order[cell]]),[0,3])
+        # normalize by mean
+        # c/=np.nanmean(c.ravel()) +1E-3
+        # add plots
+        row_i = int(ystride*math.floor(cell/nperrow))
+        col_i = int(xstride*(cell%nperrow))
+
+
+
+        # plot in morph order
+        tick_inds = np.arange(0,c.shape[0],10)
+        morphsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i+1])
+        morphsort_ax.imshow(c[morph_order,:],cmap='magma',aspect='auto')
+        tick_labels = ["%.2f" % morph_s[i] for i in tick_inds]
+
+        # plot in trial order
+        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i])
+        trialsort_ax.imshow(c,cmap='magma',aspect='auto')
+
+
+        morphsort_ax.yaxis.tick_right()
+        morphsort_ax.set_yticks(tick_inds)
+        morphsort_ax.set_yticklabels(tick_labels,fontsize=5)
+        trialsort_ax.set_yticks([])
+        morphsort_ax.set_xticks([])
+        trialsort_ax.set_xticks([])
+        trialsort_ax.set_title("cell %d \n trial sort" % si_order[cell], fontsize=9)
+        morphsort_ax.set_title("morph sort", fontsize=9)
+
+        # if col_i==0:
+        trialsort_ax.set_ylabel('Trial #')
+        
+        morphsort_ax.set_ylabel('Morph value')
+        morphsort_ax.yaxis.set_label_position('right')
+
+    return f
 
 def plot_top_cells(S_tm,masks,SI,morph,maxcells=400):
     '''

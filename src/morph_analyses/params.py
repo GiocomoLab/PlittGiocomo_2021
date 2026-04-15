@@ -21,7 +21,7 @@ dandi_dir = pathlib.Path(dandi_download_dir) / dandiset_id  # Full path to DANDI
 repo_dir = pathlib.Path(repo_dir)
 data_dir = repo_dir / 'data' 
 fig_output_dir = repo_dir / 'data' / 'figures' # Default directory for saving figures
-frame_grabber_dir = repo_dir / 'data' / 'FrameGrabber'
+
 
 fig_output_dir.mkdir(exist_ok=True, parents=True)
-frame_grabber_dir.mkdir(exist_ok=True, parents=True)
+

@@ -5,9 +5,11 @@ import scipy as sp
 from matplotlib import pyplot as plt
 import pickle
 
-import morph_analyses as m
+# import morph_analyses as m
+from . import preprocessing, params, utilities
+from . import unity_transforms, mouse_metadata
 
-df = m.preprocessing.load_session_db(dir= pathlib.Path(m.params.repo_dir) / 'data' / 'morph_vr_data')
+df = preprocessing.load_session_db(dir= pathlib.Path(params.repo_dir) / 'data' / 'morph_vr_data')
 df = df[df['RewardCount']>40]
 df = df.sort_values(['MouseName','DateTime','SessionNumber'])
 df = df[df["Track"]=="TwoTower_foraging"]
@@ -15,11 +17,11 @@ df = df[df["Track"]=="TwoTower_foraging"]
 
 def single_session_data(filename):
     print(filename)
-    vr_data = m.preprocessing.behavior_dataframe(filename)
-    trial_info, tstarts_, teleports_ = m.utilities.by_trial_info(vr_data)
+    vr_data = preprocessing.behavior_dataframe(filename)
+    trial_info, tstarts_, teleports_ = utilities.by_trial_info(vr_data)
     
     effective_morph = trial_info['morphs'] + trial_info['wallJitter']
-    return np.hstack((m.unity_transforms.wallmorphx(effective_morph[:, np.newaxis]), effective_morph[:,np.newaxis]))
+    return np.hstack((unity_transforms.wallmorphx(effective_morph[:, np.newaxis]), effective_morph[:,np.newaxis]))
 
 def single_mouse_data(mouse_alias, df_mouse):
 
@@ -28,7 +30,7 @@ def single_mouse_data(mouse_alias, df_mouse):
     for i in range(df_mouse.shape[0]):
         sess = df_mouse.iloc[i]
         date, num = sess['DateFolder'],sess['SessionNumber']
-        filename = m.params.data_dir / 'morph_vr_data' / mouse_alias / date / f'TwoTower_foraging_{num}.sqlite'
+        filename = params.data_dir / 'morph_vr_data' / mouse_alias / date / f'TwoTower_foraging_{num}.sqlite'
         key = f'date, sess:{num}'
         
         data[key] = single_session_data(filename)
@@ -73,8 +75,8 @@ def single_mouse_priors(metadata, df, x=np.linspace(-.3,1.3,num=1000)[np.newaxis
         sigma_prior=.1
 
         morph_dict[first_last] = {
-            'wallmorph prior': np.mean(m.utilities.gaussian(morph_dat[:,0:1], sigma_prior, x), axis=0),
-            'morph prior': np.mean(m.utilities.gaussian(morph_dat[:, 1:], sigma_prior, x), axis=0),                
+            'wallmorph prior': np.mean(utilities.gaussian(morph_dat[:,0:1], sigma_prior, x), axis=0),
+            'morph prior': np.mean(utilities.gaussian(morph_dat[:, 1:], sigma_prior, x), axis=0),                
         }
     return morph_dict
 
@@ -100,11 +102,11 @@ def prior_post(morph_hist_dict,first_last = 'first', sigma_likelihood=.3,x=np.li
     morph_prior /= morph_prior.sum(keepdims=True)
     
     # calculate posterior
-    wallmorph_likelihood = m.utilities.gaussian(x.T, sigma_likelihood, x)
+    wallmorph_likelihood = utilities.gaussian(x.T, sigma_likelihood, x)
     wallmorph_posterior = wallmorph_prior*wallmorph_likelihood
     wallmorph_posterior /= wallmorph_posterior.sum(axis=1,keepdims=True)
     
-    morph_likelihood = m.utilities.gaussian(m.unity_transforms.wallmorphx(x.T), sigma_likelihood, x)
+    morph_likelihood = utilities.gaussian(unity_transforms.wallmorphx(x.T), sigma_likelihood, x)
     morph_posterior = morph_prior*morph_likelihood
     morph_posterior /= morph_posterior.sum(axis=1, keepdims=True)
     
@@ -122,17 +124,17 @@ def prior_post(morph_hist_dict,first_last = 'first', sigma_likelihood=.3,x=np.li
 
 if __name__=="__main__":
     morph_dict= {}
-    for rf, mice in zip(('rare', 'frequent') , (m.mouse_metadata.rare_mice, m.mouse_metadata.frequent_mice)):
+    for rf, mice in zip(('rare', 'frequent') , (mouse_metadata.rare_mice, mouse_metadata.frequent_mice)):
         morph_dict[rf] = {}
         for mouse in mice:
             if rf == 'rare':
-                metadata = m.mouse_metadata.rare_sessions[mouse]
+                metadata = mouse_metadata.rare_sessions[mouse]
             elif rf == 'frequent':
-                metadata = m.mouse_metadata.frequent_sessions[mouse]
+                metadata = mouse_metadata.frequent_sessions[mouse]
             else:
                 raise Exception("mouse must be in rare or frequent")
             morph_dict[rf][mouse] = single_mouse_priors(metadata, df)
 
 
-    with open(m.params.data_dir / "morph_hists.pkl", 'wb') as file:
+    with open(params.data_dir / "morph_hists.pkl", 'wb') as file:
         pickle.dump(morph_dict, file)

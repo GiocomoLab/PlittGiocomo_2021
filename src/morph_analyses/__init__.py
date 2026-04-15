@@ -2,3 +2,4 @@ from . import create_nwb, map_inference, place_cell_analysis, similarity_matrix_
 
 from . import preprocessing, utilities, behavior, sess
 from . import mouse_metadata, params, empirical_priors
+from . import similarity_fraction
