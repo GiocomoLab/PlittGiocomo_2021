@@ -65,7 +65,7 @@ def plot_sessions(mouse,session_list, session_labels):
             mm_ax.set_yticks([])
             mm_ax.set_yticks([])
 
-
+ 
 
             rtsf = u.rt_similarity_fraction(S_trial_mat,trial_info)
             rtsf_ax = f.add_subplot(gs[14*i+2:14*i+12,10:18])
