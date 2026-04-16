@@ -30,8 +30,8 @@ def plot_top_cells_w_simmat(S_tm,masks,SI,morph,maxcells=400):
 
     # set up axes
     xstride = 3
-    ystride = 4
-    nperrow = 8
+    ystride = 8
+    nperrow = 5
     f = plt.figure(figsize=[nperrow*xstride,nplacecells/nperrow*ystride])
     gs = gridspec.GridSpec(math.ceil(nplacecells/nperrow)*ystride,xstride*nperrow)
 
@@ -47,6 +47,7 @@ def plot_top_cells_w_simmat(S_tm,masks,SI,morph,maxcells=400):
 
     for cell in range(nplacecells): # for each cell
         # do some smoothing in position axis for visualization
+        cell_mat = np.squeeze(S_tm[:, :, si_order[cell]])
         c = u.nansmooth(np.squeeze(S_tm[:,:,si_order[cell]]),[0,3])
         # normalize by mean
         # c/=np.nanmean(c.ravel()) +1E-3
@@ -58,12 +59,12 @@ def plot_top_cells_w_simmat(S_tm,masks,SI,morph,maxcells=400):
 
         # plot in morph order
         tick_inds = np.arange(0,c.shape[0],10)
-        morphsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i+1])
+        morphsort_ax = f.add_subplot(gs[row_i:row_i+ystride-5,col_i+1])
         morphsort_ax.imshow(c[morph_order,:],cmap='magma',aspect='auto')
         tick_labels = ["%.2f" % morph_s[i] for i in tick_inds]
 
         # plot in trial order
-        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-1,col_i])
+        trialsort_ax = f.add_subplot(gs[row_i:row_i+ystride-5,col_i])
         trialsort_ax.imshow(c,cmap='magma',aspect='auto')
 
 
@@ -81,6 +82,28 @@ def plot_top_cells_w_simmat(S_tm,masks,SI,morph,maxcells=400):
         
         morphsort_ax.set_ylabel('Morph value')
         morphsort_ax.yaxis.set_label_position('right')
+        
+        #plot similiarity matrix
+        cell_mat_norm = cell_mat/(np.linalg.norm(cell_mat,2,axis=-1, keepdims=True)+1E-3)
+        
+        
+        # plot in morph order
+        morph_simmat = np.matmul(cell_mat_norm[morph_order,:], cell_mat_norm[morph_order,:].T)
+        # morph_simmat[np.diag_indices_from(morph_simmat)]=np.nan
+        morphsort_ax = f.add_subplot(gs[row_i+ystride-5:row_i+ystride-1,col_i+1])
+        morphsort_ax.imshow(morph_simmat,cmap='cividis',aspect='equal', vmin=.2, vmax=1)
+        
+
+        # plot in trial order
+        trialsort_ax = f.add_subplot(gs[row_i+ystride-5:row_i+ystride-1,col_i])
+        trial_simmat = np.matmul(cell_mat_norm, cell_mat_norm.T)
+        # trial_simmat[np.diag_indices_from(trial_simmat)]=np.nan
+        trialsort_ax.imshow(trial_simmat,cmap='cividis',aspect='equal', vmin=.2, vmax=1)
+
+
+        
+        
+        
 
     return f
 

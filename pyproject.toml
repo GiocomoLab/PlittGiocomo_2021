@@ -29,6 +29,7 @@ dependencies = [
     "nwbinspector",
     "seaborn",
     "umap-learn",
+    "nmftools",
 ]
 
 [tool.uv.sources]

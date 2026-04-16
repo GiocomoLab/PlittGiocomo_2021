@@ -1815,6 +1815,11 @@ wheels = [
 ]
 
 [[package]]
+name = "nmftools"
+version = "0.0.1"
+source = { git = "https://github.com/ahwillia/nmftools#70ef2788af3d3c829001f126b4291b9bd554f77f" }
+
+[[package]]
 name = "notebook"
 version = "7.5.5"
 source = { registry = "https://pypi.org/simple" }
@@ -2242,6 +2247,7 @@ dependencies = [
     { name = "ipython" },
     { name = "jupyter" },
     { name = "matplotlib" },
+    { name = "nmftools" },
     { name = "numpy" },
     { name = "nwbinspector" },
     { name = "pandas" },
@@ -2270,6 +2276,7 @@ requires-dist = [
     { name = "ipython" },
     { name = "jupyter" },
     { name = "matplotlib" },
+    { name = "nmftools", git = "https://github.com/ahwillia/nmftools" },
     { name = "numpy" },
     { name = "nwbinspector" },
     { name = "opencv-python", marker = "extra == 'scratch'" },
