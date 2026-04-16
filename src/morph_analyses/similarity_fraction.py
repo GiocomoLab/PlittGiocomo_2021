@@ -1,8 +1,19 @@
+"""
+Similarity-fraction decoding and KL-divergence analysis.
+
+Takes per-trial similarity fraction values (computed in utilities.py) and
+converts them to estimated stimulus values (yhat), then compares the resulting
+joint distribution of (true wall morph, decoded morph) against the Bayesian
+posteriors derived from empirical priors to compute a KL-divergence metric.
+
+A positive delta-KL ( D_KL(rare || H) - D_KL(freq || H) ) means the neural
+decoder is better described by the rare-morph prior than the frequent-morph
+prior, consistent with experience-dependent changes in hippocampal coding.
+"""
+
 import numpy as np
 import scipy as sp
 import pickle
-
-
 
 from . import utilities as u
 from . import params, empirical_priors
@@ -13,7 +24,22 @@ from . import similarity_fraction
 
 
 
-def single_session_kldiv(_wm,_yh, morph_dict=None):
+def single_session_kldiv(_wm, _yh, morph_dict=None):
+    '''Compute delta-KL divergence between the neural decoder and rare vs. frequent priors.
+
+    Builds the joint distribution H[i,j] = P(wall_morph=x_i, yhat=x_j) by
+    smoothing each trial's (wall_morph, yhat) pair with a Gaussian kernel
+    (sigma=0.1) and summing across trials, then normalizes rows to produce
+    a conditional distribution P(yhat | wall_morph). Computes the mean KL
+    divergence of each row against the corresponding row of the rare-morph and
+    frequent-morph posteriors (restricted to wall morph in [0.1, 1.1]).
+
+    inputs: _wm        - [ntrials,] array of wall morph values (wallmorphx(effective_morph))
+            _yh        - [ntrials,] array of decoded morph estimates (from sf_to_yhat)
+            morph_dict - pre-loaded dict from data/morph_hists.pkl; if None, loads from disk
+    outputs: H     - [1000, 1000] joint/conditional distribution matrix
+             dkl   - float; mean D_KL(rare || H) minus mean D_KL(freq || H) (bits)
+    '''
     
     if morph_dict is None:
         with open(params.data_dir / "morph_hists.pkl", 'rb') as file:
@@ -41,12 +67,41 @@ def single_session_kldiv(_wm,_yh, morph_dict=None):
 
         
 def sf_to_yhat(sf, morphs):
-    # hardcoded values to match posterior
+    '''Rescale similarity fraction to estimated stimulus values in morph space.
+
+    Linearly maps the similarity fraction so that the median SF on morph=0 trials
+    aligns to 0.094 and the median SF on morph=1 trials aligns to 1.073 (the
+    endpoints of the wallmorphx-transformed stimulus axis), then clips to [-0.3, 1.3].
+
+    inputs: sf     - [ntrials,] similarity fraction (output of utilities.similarity_fraction)
+            morphs - [ntrials,] mean morph values used to identify the endpoint trials
+    outputs: yhat  - [ntrials,] estimated stimulus values clipped to [-0.3, 1.3]
+    '''
+    # hardcoded values to match the wallmorphx range [0.094, 1.073]
     yhat = (sf- np.median(sf[morphs==0]))/(np.median(sf[morphs==1])-np.median(sf[morphs==0]))*(1.073-.094) +.094
     return np.clip(yhat,-.3, 1.3)
 
 
 def single_sess_reconstruction(sess, ts_name='spks_norm', morph_dict=None, sigma_likelihood=.3):
+    '''Full prior/posterior reconstruction pipeline for a single session.
+
+    Computes the similarity fraction, converts to yhat, builds the joint
+    distribution H, infers an implied prior H_prior by dividing H by the
+    likelihood, then computes both the conditional-posterior delta-KL (H vs
+    empirical posteriors) and the prior-level delta-KL (H_prior vs empirical
+    priors). Useful for Figure 6 / extended data showing how well the neural
+    code matches the theoretical Bayesian posterior.
+
+    inputs: sess             - CA1MorphSession with trial_matrices[ts_name] populated
+            ts_name          - key in sess.trial_matrices to use (default 'spks_norm')
+            morph_dict       - pre-loaded dict from data/morph_hists.pkl; if None, loads from disk
+            sigma_likelihood - width of the Gaussian likelihood (default 0.3)
+    outputs: H         - [1000, 1000] conditional distribution P(yhat | wall_morph)
+             H_prior   - [1000,] implied prior recovered by dividing H by the likelihood
+             dkl       - float; conditional delta-KL (bits)
+             dkl_prior - float; prior-level delta-KL (bits)
+             yhat      - [ntrials,] decoded morph estimates
+    '''
     if morph_dict is None:
         with open(params.data_dir / "morph_hists.pkl", 'rb') as file:
             morph_dict = pickle.load(file)
@@ -94,6 +149,20 @@ def single_sess_reconstruction(sess, ts_name='spks_norm', morph_dict=None, sigma
 
 
 def get_kl_div_summary(sessions, trial_mat_key='spks_norm', morph_dict=None):
+    '''Aggregate KL-divergence metrics across all test sessions for a set of mice.
+
+    Loops over the sessions dict (structured like mouse_metadata.rare_sessions or
+    frequent_sessions), loads each test session from NWB, computes the similarity
+    fraction and delta-KL, and accumulates a cross-session-average joint
+    distribution H.
+
+    inputs: sessions      - dict of mouse metadata; each value must have 'test_sessions'
+                            (list of dicts with 'day' key)
+            trial_mat_key - timeseries key to use for similarity fraction (default 'spks_norm')
+            morph_dict    - pre-loaded dict from data/morph_hists.pkl; if None, loads from disk
+    outputs: H    - [1000, 1000] conditional distribution averaged across all mice and sessions
+             dkl  - dict keyed by mouse identifier; list of per-session delta-KL values
+    '''
     if morph_dict is None:
         with open(params.data_dir / "morph_hists.pkl", 'rb') as file:
             morph_dict = pickle.load(file)

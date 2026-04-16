@@ -1,3 +1,11 @@
+"""
+General-purpose analysis utilities for the CA1 morphing experiment.
+
+Provides spatial binning, neural similarity metrics, dF/F calculation,
+leave-one-trial-out cross-validation, and plotting helpers used throughout
+the analysis pipeline.
+"""
+
 import pdb
 import numpy as np
 import scipy as sp
@@ -8,9 +16,6 @@ from scipy.ndimage import filters
 from astropy.convolution import convolve, Gaussian1DKernel
 import sklearn as sk
 from sklearn import neighbors
-
-
-### useful general purpose functions for data analysis ###
 
 def gaussian(mu,sigma,x):
     '''radial basis function centered at 'mu' with width 'sigma', sampled at 'x' '''
@@ -60,8 +65,21 @@ def similarity_fraction(S_trial_mat,trial_info):
         # sf[trial] = np.dot(cd,S_tmat[trial,:])
     return sf
 
-def rt_similarity_fraction(S_trial_mat,trial_info,sigma=2):
+def rt_similarity_fraction(S_trial_mat, trial_info, sigma=2):
+    '''Calculate similarity fraction at each position bin (real-time / spatially resolved).
 
+    For every trial and every position bin, computes how similar the population
+    vector is to the average morph=1 representation relative to both morph
+    extremes (leave-one-out for endpoint trials). Produces a spatial profile
+    of the similarity fraction rather than a single per-trial value.
+
+    inputs: S_trial_mat - [trials, position bins, neurons] tensor of activity rates
+            trial_info  - dictionary of trial information; must contain key 'morphs'
+                          (output of by_trial_info)
+            sigma       - width of Gaussian smoothing applied along the position axis
+                          before computing similarity. Set to 0 to skip smoothing.
+    returns: sf - [trials, position bins] array of per-bin similarity fractions
+    '''
     if sigma>0:
         S_trial_mat = sp.ndimage.filters.gaussian_filter1d(S_trial_mat,sigma,axis=1) # smooth position by 1 bin
 
@@ -418,11 +436,15 @@ def by_trial_info(data,rzone0=(250,315),rzone1=(350,415)):
     return trial_info, tstart_inds, teleport_inds
 
 
-def avg_by_morph(morphs,mat):
-    '''average mat [trials x n ( x m)] by morph values in morphs
-    input: morphs - [ntrials,] vector used for binning
-            mat - trials x x n (x m) matrix to be binned
-    output: pcnt_mean - mat data binned and averaged by values of morphs
+def avg_by_morph(morphs, mat):
+    '''Average mat [trials x n (x m)] by unique morph values.
+
+    Groups rows of mat by the corresponding value in morphs, takes the
+    nanmean within each group, and returns the result in ascending morph order.
+
+    inputs: morphs    - [ntrials,] array of morph labels used for grouping
+            mat       - trials x n (x m) array to be averaged; 1-D, 2-D, or 3-D
+    output: pcnt_mean - [n_unique_morphs x ...] array of group means
     '''
 
     # account for different sizes of mat

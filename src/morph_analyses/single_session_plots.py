@@ -1,3 +1,13 @@
+"""
+Multi-panel summary plots for one or more CA1 morphing sessions.
+
+Each panel row shows: the trial x trial similarity matrix (morph-sorted), the
+morph scatter, the real-time similarity fraction (SF vs. position), the
+whole-trial SF vs. stimulus frequency, the joint distribution H with its
+delta-KL annotation, and the top-2 eigenvectors of the similarity matrix
+colored by morph value.
+"""
+
 import os
 import pickle
 
@@ -6,21 +16,36 @@ import numpy as np
 import scipy as sp
 from matplotlib import gridspec
 
-from . import utilities as u 
-from .sess import CA1MorphSession 
+from . import utilities as u
+from .sess import CA1MorphSession
 from . import similarity_matrix_analysis as sm
 from . import unity_transforms as ut
-from . import similarity_fraction 
+from . import similarity_fraction
 
 
 
 
 
+def plot_sessions(mouse, session_list, session_labels):
+    '''Generate a multi-panel summary figure for one or more sessions of a mouse.
 
+    For each session in session_list, loads the CA1MorphSession from NWB and
+    produces a row of panels:
+      - Trial x trial cosine similarity matrix (sorted by morph value)
+      - Morph value scatter (morph-sorted axis)
+      - Real-time similarity fraction (SF vs. position, one curve per trial)
+      - Whole-trial SF vs. horizontal grating frequency
+      - Joint distribution H with delta-KL divergence annotation
+      - Top-2 eigenvectors of the similarity matrix colored by morph value
 
-def plot_sessions(mouse,session_list, session_labels):
-    
-    
+    Sessions that fail to load are silently skipped with a printed warning.
+
+    inputs: mouse          - mouse identifier string (e.g. 'R1')
+            session_list   - list of session metadata dicts, each with a 'day' key
+            session_labels - list of strings ('training' or 'testing') corresponding
+                             to each entry in session_list
+    outputs: f - matplotlib figure object
+    '''
     f = plt.figure(figsize=[25,7*len(session_list)])
     gs = gridspec.GridSpec(14*len(session_list),50)
     

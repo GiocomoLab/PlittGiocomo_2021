@@ -1,3 +1,22 @@
+"""
+Bayesian MAP estimation and prior modeling for the morphing task.
+
+Provides:
+  - Basis functions (gaussian, unif) for constructing stimulus distributions
+  - Idealized rare- and frequent-morph condition priors (rare_prior, freq_prior)
+  - A log-space transform (convert_prior_to_log) that maps stimulus distributions
+    from linear morph space into log-frequency space, implementing Weber's law
+    scaling (frequencies f0=3 Hz to f1=12 Hz)
+  - MAP estimation given a prior and a Gaussian likelihood (get_MAP)
+  - Module-level splines morph_2_logstim / logstim_2_morph for converting
+    between linear morph space and log-frequency space
+
+The log-space transform is important because the animal's prior is assumed to
+be formed over perceived frequency ratios (Weber's law), not linear frequency
+differences. Converting to log space before computing the posterior produces
+predictions that better match the neural data.
+"""
+
 import numpy as np
 import scipy as sp
 import scipy.ndimage.filters as filters
@@ -15,18 +34,36 @@ def unif(mu,sigma,x):
     ''' step function/uniform distribution centered at 'mu' with width 'sigma', sampled at 'x' '''
     return 1*(np.abs(x-mu)<=sigma/2)
 
-def gaussian_dens(mu,sigma,x):
-    ''' normalize output of gaussian to be valid distribution'''
+def gaussian_dens(mu, sigma, x):
+    '''Normalized Gaussian: radial basis function that sums to 1.
+
+    inputs: mu, sigma, x - same as gaussian()
+    outputs: normalized probability mass function
+    '''
     v = gaussian(mu,sigma,x)
     return v/v.sum()
 
-def mult_and_norm(dens1,dens2):
-    ''' multiply two different distributions and normalize '''
+def mult_and_norm(dens1, dens2):
+    '''Multiply two distributions element-wise and normalize to sum to 1.
+
+    Implements Bayesian posterior computation: post = prior * likelihood.
+
+    inputs: dens1, dens2 - 1-D arrays of equal length representing distributions
+    outputs: normalized product distribution
+    '''
     post = dens1*dens2
     return post/post.sum()
 
-def G(_g,_f):
-    ''' convolve _g with _f twice. _g and _f should be of same shape '''
+def G(_g, _f):
+    '''Convolve _g with _f twice (double smoothing), normalized by filter size squared.
+
+    Used to construct smooth idealized prior distributions by double-convolving
+    a rectangular pulse with a smoothing kernel.
+
+    inputs: _g - signal to convolve (1-D array)
+            _f - smoothing kernel (1-D array of same length)
+    outputs: doubly-convolved and normalized result (same shape as _g)
+    '''
     return np.convolve(np.convolve(_g,_f,mode='same'),_f,mode='same')/_f.shape[0]/_f.shape[0]
 
 
@@ -132,12 +169,25 @@ def get_MAP(log_prior,S_hat,sigma=.3,samp=np.linspace(-.3,1.3,num=1000)):
     return np.array([samp[np.argmax(log_prior*gaussian(s,.3,samp))] for s in morph_2_logstim(S_hat).tolist()])
 
 
-# whole-module scoped variables needed to use splines in other functions
-f0, f1 = 3, 12
-_theta = np.linspace(-.1,1.1,num=1000)
-_theta_log = np.log(f0*(1-_theta)+f1*_theta)
+# ---------------------------------------------------------------------------
+# Module-level log-frequency transform splines
+#
+# Stimulus frequencies range from f0=3 Hz (s=0) to f1=12 Hz (s=1). To apply
+# Weber's law, we work in log-frequency space. The transforms below map the
+# morph axis (sampled uniformly on [-0.3, 1.3]) to and from a rescaled
+# log-frequency axis also spanning [-0.3, 1.3].
+#
+# morph_2_logstim : spline, morph space -> log-frequency space
+# logstim_2_morph : spline, log-frequency space -> morph space
+# ---------------------------------------------------------------------------
+f0, f1 = 3, 12  # grating frequencies at s=0 and s=1 (Hz)
+
+_theta = np.linspace(-.1, 1.1, num=1000)  # morph values over the stimulus range
+_theta_log = np.log(f0*(1-_theta) + f1*_theta)  # log of the linearly interpolated frequency
+# rescale log-frequency to span [-0.3, 1.3] to match the morph axis convention
 theta_log = (_theta_log-np.amin(_theta_log))/(np.amax(_theta_log)-np.amin(_theta_log))*1.6 - .3
-theta_log[0],theta_log[-1]=-.3,1.3 # hard code the edges to correct float errors
-theta = np.linspace(-.3,1.3,num=1000)
-morph_2_logstim = spline(theta,theta_log)
-logstim_2_morph = spline(theta_log,theta)
+theta_log[0], theta_log[-1] = -.3, 1.3  # force exact endpoints to correct floating-point errors
+
+theta = np.linspace(-.3, 1.3, num=1000)  # morph axis samples for spline fitting
+morph_2_logstim = spline(theta, theta_log)   # callable: morph value -> log-freq value
+logstim_2_morph = spline(theta_log, theta)   # callable: log-freq value -> morph value

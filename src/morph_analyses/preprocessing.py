@@ -1,3 +1,18 @@
+"""
+Data loading and alignment for the CA1 morphing experiment.
+
+Handles three data sources:
+  - Neurolabware two-photon scan metadata (.mat/.sbx files via loadmat_sbx)
+  - Unity VR behavioral logs (.sqlite files via behavior_dataframe / _get_frame)
+  - Suite2P output directories (F.npy, Fneu.npy, spks.npy, iscell.npy)
+
+The main entry point for most analyses is load_scan_sess(), which returns
+imaging-aligned behavioral data alongside neuropil-corrected dF/F and
+deconvolved activity. The private _VR_align_to_2P* functions handle
+interpolation of VR variables onto the 2P imaging clock using TTL timestamps
+recorded in the scan metadata.
+"""
+
 import numpy as np
 import scipy as sp
 import scipy.io as spio
@@ -358,16 +373,22 @@ def _VR_align_to_2P(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
     return ca_df
 
 
-def _VR_align_to_2P_jitless(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
-    '''align VR behavior data to 2P sample times using splines. called internally
-    from behavior_dataframe if scanmat exists
+def _VR_align_to_2P_jitless(vr_dframe, infofile, n_imaging_planes=1, n_lines=512.):
+    '''Align VR behavior data to 2P sample times for sessions without per-trial jitter fields.
+
+    Variant of _VR_align_to_2P for early sessions where the VR sqlite database
+    does not contain the wallJitter / towerJitter / bckgndJitter columns. Only
+    the 'morph' column is interpolated via nearest-neighbor; all other handling
+    (TTL filtering, position interpolation, cumulative-sum variables) is identical
+    to the jitter-aware version.
+
     inputs:
-        vr_dframe- VR pandas dataframe loaded directly from .sqlite file
-        infofile- path
-        n_imaging_planes- number of imaging planes (not implemented)
-        n_lines - number of lines collected during each frame (default 512.)
+        vr_dframe         - VR pandas dataframe loaded directly from a .sqlite file
+        infofile          - path to Neurolabware .mat scan-metadata file
+        n_imaging_planes  - number of imaging planes (not yet implemented; ignored)
+        n_lines           - number of scan lines per imaging frame (default 512.)
     outputs:
-        ca_df - calcium imaging aligned VR data frame (pandas dataframe)
+        ca_df - imaging-clock-aligned VR dataframe (timepoints x variables)
     '''
 
     info = loadmat_sbx(infofile) # load .mat file with ttl times
@@ -465,16 +486,21 @@ def _VR_align_to_2P_jitless(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 5
     ca_df[['reward','tstart','teleport','lick']].fillna(value=0,inplace=True)
     return ca_df
 
-def _VR_align_to_2P_FlashLED(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 512.):
-    '''align VR behavior data to 2P sample times using splines. called internally
-    from behavior_dataframe if scanmat exists
+def _VR_align_to_2P_FlashLED(vr_dframe, infofile, n_imaging_planes=1, n_lines=512.):
+    '''Align VR behavior to 2P sample times for FlashLED (go/no-go) task sessions.
+
+    Variant of _VR_align_to_2P for the FlashLED go/no-go paradigm, which uses
+    a different set of VR columns (LEDCue, gng, manrewards) instead of the
+    morphing task columns. TTL filtering and interpolation logic are identical
+    to the standard alignment function.
+
     inputs:
-        vr_dframe- VR pandas dataframe loaded directly from .sqlite file
-        infofile- path
-        n_imaging_planes- number of imaging planes (not implemented)
-        n_lines - number of lines collected during each frame (default 512.)
+        vr_dframe         - VR pandas dataframe loaded directly from a .sqlite file
+        infofile          - path to Neurolabware .mat scan-metadata file
+        n_imaging_planes  - number of imaging planes (not yet implemented; ignored)
+        n_lines           - number of scan lines per imaging frame (default 512.)
     outputs:
-        ca_df - calcium imaging aligned VR data frame (pandas dataframe)
+        ca_df - imaging-clock-aligned VR dataframe (timepoints x variables)
     '''
 
     info = loadmat_sbx(infofile) # load .mat file with ttl times
@@ -561,8 +587,18 @@ def _VR_align_to_2P_FlashLED(vr_dframe,infofile, n_imaging_planes = 1,n_lines = 
 
 
 def _VR_interp(frame):
-    '''if 2P data doesn't exist interpolates behavioral data onto an even grid
-    see _VR_align_to_2P for details'''
+    '''Interpolate VR behavioral data onto a uniform 30 Hz time grid (no 2P alignment).
+
+    Used when no imaging data exists — resamples all VR columns onto an evenly
+    spaced time axis at 30 Hz using the same interpolation strategy as
+    _VR_align_to_2P (linear for position, nearest for categorical fields,
+    cumsum-then-diff for event counts).
+
+    inputs:
+        frame - raw VR pandas dataframe from _get_frame
+    outputs:
+        ca_df - resampled VR dataframe at 30 Hz
+    '''
     fr = 30 # frame rate
 
     vr_time = frame['time']._values

@@ -1,3 +1,22 @@
+"""
+Session class for the CA1 morphing experiment.
+
+Defines CA1MorphSession, a subclass of two_photon_utils.sess.Session, which
+adds experiment-specific methods for loading Suite2P outputs, computing place
+cells, and reading from / writing to NWB files hosted on DANDI (dataset 000054).
+
+Typical usage (from NWB):
+    sess = CA1MorphSession.from_nwb('R1', 'testing', day=8)
+
+Typical usage (from raw data):
+    sess = CA1MorphSession(**file_dict)
+    sess.load_scan_info()
+    sess.align_VR_to_2P()
+    sess.get_trial_info()
+    sess.gen_standard_ts_tmats()
+    sess.place_cells_calc(nperms=1000)
+"""
+
 import pathlib
 import pickle
 import numpy as np
@@ -39,18 +58,32 @@ class CA1MorphSession(tpu.sess.Session):
 
 
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True, 
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True,
                                     **trial_matrix_kwargs):
-        """
+        """Bin a timeseries into trials x position bins and cache the result.
 
-        :param ts_name:
-        :param pos_key:
-        :param min_pos:
-        :param max_pos:
-        :param bin_size:
-        :param mat_only:
-        :param trial_matrix_kwargs:
-        :return:
+        Delegates to the parent Session.add_pos_binned_trial_matrix, then
+        ensures that 'bin_edges' and 'bin_centers' are present in
+        self.trial_matrices so downstream code can recover spatial axes
+        without re-computing them.
+
+        Parameters
+        ----------
+        ts_name : str or list of str
+            Key(s) in self.timeseries to bin (e.g. 'spks_norm', 'licks').
+        pos_key : str
+            Column name in self.vr_data to use as the position variable.
+        min_pos : float
+            Minimum track position in cm (default 0).
+        max_pos : float
+            Maximum track position in cm (default 450).
+        bin_size : float
+            Spatial bin width in cm (default 10).
+        mat_only : bool
+            If True, store only the binned data array; if False, also store
+            occupancy, bin_edges, and bin_centers (default True).
+        **trial_matrix_kwargs
+            Additional keyword arguments forwarded to the parent method.
         """
 
         super(CA1MorphSession, self).add_pos_binned_trial_matrix(
@@ -63,7 +96,23 @@ class CA1MorphSession(tpu.sess.Session):
             self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
             self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
 
-    def place_cells_calc(self,  **pc_kwargs):
+    def place_cells_calc(self, **pc_kwargs):
+        """Identify place cells and compute spatial information for this session.
+
+        Runs a permutation-based spatial information test on the normalized
+        deconvolved activity ('spks_norm') using trial start/stop indices and
+        morph values stored on the session object. Results are stored in
+        self.place_cell_info with keys:
+            'masks' - dict keyed by morph value; boolean arrays marking place cells
+            'SI'    - dict keyed by morph value; spatial information (bits/spike) per cell
+            'p'     - dict keyed by morph value; empirical p-values from shuffle test
+
+        Parameters
+        ----------
+        **pc_kwargs
+            Keyword arguments forwarded to place_cell_analysis.place_cells_calc
+            (e.g. nperms=1000, pthr=0.05, speed=None).
+        """
 
         masks, SI, pvals = pc.place_cells_calc(self.timeseries['spks_norm'].T, 
                                             self.vr_data['pos'],
@@ -79,6 +128,21 @@ class CA1MorphSession(tpu.sess.Session):
         
         
     def gen_standard_ts_tmats(self):
+        """Load Suite2P outputs and build standard timeseries and trial matrices.
+
+        Reads F.npy, Fneu.npy, and spks.npy from the plane0 subdirectory of
+        self.s2p_path, applies iscell masking, computes neuropil-corrected dF/F
+        (0.7 * Fneu coefficient), and normalizes deconvolved spikes to the 99th
+        percentile. Adds the following to self.timeseries:
+            'F'         - raw fluorescence (neurons x timepoints)
+            'Fneu'      - neuropil fluorescence (neurons x timepoints)
+            'spks'      - deconvolved activity rate (neurons x timepoints)
+            'dff'       - neuropil-corrected dF/F (neurons x timepoints)
+            'spks_norm' - spks / 99th-percentile of each cell (neurons x timepoints)
+
+        Also bins spks_norm, speed, and licks into trial x position matrices
+        and stores them in self.trial_matrices.
+        """
         self.s2p_path = pathlib.Path(self.s2p_path)
         
         iscell = np.load(self.s2p_path / 'plane0' / 'iscell.npy')[:, 0].astype(bool)
@@ -153,14 +217,29 @@ class CA1MorphSession(tpu.sess.Session):
 
     @classmethod
     def from_nwb(cls, mouse, traintest, day, **kwargs):
-        """Create a CA1MorphSession from an NWB file.
+        """Create a CA1MorphSession by reading from an NWB file on DANDI.
+
+        Constructs the NWB file path from the DANDI download directory
+        (params.dandi_dir), loads all behavioral and ophys data, and returns
+        a fully initialized CA1MorphSession with timeseries and trial matrices
+        populated.
 
         Parameters
         ----------
-        
+        mouse : str
+            Mouse identifier string as used in NWB filenames (e.g. 'R1').
+        traintest : str
+            Either 'training' or 'testing'.
+        day : int or float
+            Day label matching the NWB filename (e.g. 8 -> 'day8', 1.1 -> 'day1-1').
+        **kwargs
+            Additional keyword arguments forwarded to the CA1MorphSession constructor.
+
         Returns
         -------
         CA1MorphSession
+            Session with vr_data, timeseries, trial_matrices, trial_info, and
+            place_cell_info all populated from the NWB file.
         """
         from . import params
         assert traintest in set(('training','testing')), "traintest must be either 'training' or 'testing'"
