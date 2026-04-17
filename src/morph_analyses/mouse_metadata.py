@@ -9,9 +9,9 @@ Each dict is keyed by a short mouse ID (e.g. 'R1', 'F1') and contains:
   alias              - numeric mouse identifier used in file/NWB paths
   sex                - 'M' or 'F'
   date_of_birth      - datetime.datetime
-  genotype           - transgenic line (all mice: CaMKII-Cre)
+  genotype           - transgenic line 
   imaging_lambda     - excitation wavelength in nm (all mice: 920)
-  functional_indicator - viral construct (all mice: AAV-PHP.eB-EF1a-DIO-GCaMP6f)
+  functional_indicator - viral construct 
   training_sessions  - tuple of session dicts (date_str, scene, session, scan, day)
   test_sessions      - tuple of session dicts (date_str, scene, session, scan, day)
 
