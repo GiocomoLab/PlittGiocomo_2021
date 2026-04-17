@@ -47,8 +47,9 @@ def plot_top_cells_w_simmat(S_tm,masks,SI,morph,maxcells=400):
 
     for cell in range(nplacecells): # for each cell
         # do some smoothing in position axis for visualization
-        cell_mat = np.squeeze(S_tm[:, :, si_order[cell]])
+        
         c = u.nansmooth(np.squeeze(S_tm[:,:,si_order[cell]]),[0,3])
+        cell_mat = u.nansmooth(np.squeeze(S_tm[:,:,si_order[cell]]),[0,1])
         # normalize by mean
         # c/=np.nanmean(c.ravel()) +1E-3
         # add plots
