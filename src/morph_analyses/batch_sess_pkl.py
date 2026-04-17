@@ -3,6 +3,7 @@ Batch processing pipeline for CA1 morphing sessions.
 
 Runs the full per-session processing pipeline (load -> align -> place cells)
 in parallel using ProcessPoolExecutor and saves each result as a pickle file.
+This was a preprocessing step for creating NWB files.
 
 Typical entry point::
 
